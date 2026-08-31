@@ -1,0 +1,2173 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:#0a0d0b;color:#e9e7e1;font-family:"Archivo",ui-sans-serif,system-ui,"Segoe UI",Arial,sans-serif;text-transform:uppercase;letter-spacing:0.04em;}
+  a{color:#f0b429;text-decoration:none;}
+  a:hover{text-decoration:underline;}
+  input,button,textarea{font-family:inherit;}
+  input:focus,textarea:focus{outline:none;border-color:rgba(240,180,41,0.55);}
+  input::placeholder,textarea::placeholder{color:#6f736b;}
+  ::-webkit-scrollbar{width:7px;height:7px;}
+  ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.14);border-radius:4px;}
+  ::-webkit-scrollbar-track{background:transparent;}
+  @keyframes matchPop{0%{transform:scale(1);}50%{transform:scale(1.12);}100%{transform:scale(1);}}
+
+</style>
+</helmet>
+
+<div style="position:relative;width:100%;height:100vh;overflow:hidden;background:#0a0d0b;">
+
+  <div ref="{{ boot.setRoot }}" onClick="{{ boot.onSkip }}" style="position:fixed;inset:0;z-index:90;background:#080b09;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;cursor:pointer;transition:opacity 400ms ease;">
+    <div style="font-size:11px;font-weight:700;letter-spacing:0.34em;text-transform:uppercase;color:#f0b429;">Trackingwabbitz</div>
+    <canvas ref="{{ boot.setCanvas }}" style="width:640px;max-width:78vw;aspect-ratio:8 / 3;display:block;border:1px solid rgba(255,255,255,0.09);border-radius:7px;image-rendering:pixelated;"></canvas>
+    <div style="width:640px;max-width:78vw;height:3px;border-radius:9999px;background:rgba(255,255,255,0.08);overflow:hidden;">
+      <div ref="{{ boot.setBar }}" style="width:0%;height:100%;background:#b7d44a;transition:width 120ms linear;"></div>
+    </div>
+    <div style="font-size:9.5px;letter-spacing:0.16em;text-transform:uppercase;color:#6e716a;">Loading &#183; click to skip</div>
+  </div>
+
+  <div ref="{{ setBackdrop }}" style="position:absolute;inset:0;z-index:0;background-image:url('./assets/backdrop.jpg');background-repeat:repeat;background-size:282px auto;background-position:center top;"></div>
+  <input ref="{{ setFileInput }}" type="file" accept="image/*" onChange="{{ onBackdropFile }}" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;" />
+  <div style="position:absolute;inset:0;z-index:1;pointer-events:none;background:{{ scrim }};"></div>
+
+  <div style="position:relative;z-index:2;display:flex;gap:10px;width:100%;height:100%;padding:12px;overflow:hidden;font-size:13px;">
+
+    <!-- LEFT RAIL -->
+    <div style="width:196px;flex-shrink:0;display:flex;flex-direction:column;gap:10px;overflow-y:auto;">
+
+      <div style="background:rgba(18,23,17,0.965);border:1px solid rgba(255,255,255,0.09);border-radius:8px;padding:12px;">
+        <div style="font-size:10.5px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#f0b429;">On the horizon</div>
+        <div style="font-size:11px;line-height:1.45;color:#9a9d95;margin-top:5px;">Everything scheduled, counted down from today.</div>
+        <div style="display:flex;flex-direction:column;gap:5px;margin-top:10px;">
+          <sc-for list="{{ horizon }}" as="h" hint-placeholder-count="8">
+            <button onClick="{{ h.onOpen }}" style="display:block;width:100%;text-align:left;cursor:pointer;border:1px solid rgba(255,255,255,0.08);border-left:3px solid {{ h.accent }};border-radius:5px;padding:7px 8px;background:{{ h.bg }};transition:border-color 150ms;" style-hover="border-color:rgba(240,180,41,0.5);">
+              <div style="display:flex;align-items:baseline;gap:6px;">
+                <span style="flex:1;min-width:0;font-size:11.5px;font-weight:600;line-height:1.3;overflow-wrap:anywhere;color:#e9e7e1;">{{ h.title }}</span>
+                <span style="font-size:10.5px;font-weight:700;font-variant-numeric:tabular-nums;color:{{ h.daysColor }};white-space:nowrap;">{{ h.daysLabel }}</span>
+              </div>
+              <div style="display:flex;align-items:baseline;gap:6px;margin-top:3px;">
+                <span style="flex:1;font-size:10.5px;font-variant-numeric:tabular-nums;color:#8b8e86;">{{ h.dateLabel }}</span>
+                <span style="font-size:9.5px;letter-spacing:0.04em;text-transform:uppercase;color:#6f736b;">{{ h.metaLabel }}</span>
+              </div>
+            </button>
+          </sc-for>
+          <sc-if value="{{ horizonEmpty }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#8b8e86;padding:6px 2px;"><span style="display:inline-flex;align-items:center;gap:2px;flex-shrink:0;opacity:0.5;"><span style="width:2px;height:4px;border-radius:1px;background:#7fa63a;transform:rotate(-20deg);"></span><span style="width:4px;height:7px;border-radius:1px 1px 2px 2px;background:#c96a15;"></span></span>Nothing scheduled ahead.</div>
+          </sc-if>
+        </div>
+      </div>
+
+      <div style="background:rgba(18,23,17,0.965);border:1px solid rgba(255,255,255,0.09);border-radius:8px;padding:12px;">
+        <div style="font-size:10.5px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#f0b429;">Departments</div>
+        <div style="font-size:11px;line-height:1.45;color:#9a9d95;margin-top:5px;">Click one to filter the board.</div>
+        <div style="display:flex;flex-direction:column;gap:2px;margin-top:9px;">
+          <sc-for list="{{ projectRows }}" as="p" hint-placeholder-count="4">
+            <div style="display:flex;align-items:center;gap:7px;border:1px solid {{ p.bd }};border-radius:5px;padding:6px 7px;background:{{ p.bg }};">
+              <span style="width:8px;height:8px;border-radius:2px;flex-shrink:0;background:{{ p.color }};"></span>
+              <button onClick="{{ p.onSelect }}" style="flex:1;min-width:0;text-align:left;border:none;background:transparent;padding:0;cursor:pointer;font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:{{ p.fg }};">{{ p.label }}</button>
+              <span style="font-size:10.5px;font-variant-numeric:tabular-nums;color:#7e817a;">{{ p.count }}</span>
+              <button onClick="{{ p.onRemove }}" title="Remove department" style="flex:0 0 9px;border:none;background:transparent;padding:0;cursor:pointer;font-size:11px;line-height:1;color:#83867e;" style-hover="color:#f0b429;">&#215;</button>
+            </div>
+          </sc-for>
+        </div>
+        <div style="display:flex;gap:5px;margin-top:8px;">
+          <input type="text" placeholder="New department" value="{{ newProjName }}" onChange="{{ onNewProjName }}" onKeyDown="{{ onNewProjKey }}" style="flex:1;min-width:0;height:26px;border:1px solid rgba(255,255,255,0.13);border-radius:5px;background:rgba(255,255,255,0.03);color:#e9e7e1;font-size:11px;padding:0 7px;" />
+          <button onClick="{{ onAddProject }}" title="Add department" style="flex:0 0 26px;height:26px;border:1px dashed rgba(255,255,255,0.16);border-radius:5px;background:transparent;color:#c9ccc4;font-size:13px;line-height:1;cursor:pointer;" style-hover="border-color:rgba(240,180,41,0.6);color:#f0b429;">+</button>
+        </div>
+      </div>
+
+      <div style="background:rgba(18,23,17,0.965);border:1px solid rgba(255,255,255,0.09);border-radius:8px;padding:12px;">
+        <div style="font-size:10.5px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#f0b429;">Today</div>
+        <div style="display:flex;align-items:baseline;gap:7px;margin-top:8px;">
+          <span style="font-size:30px;font-weight:300;letter-spacing:-0.02em;line-height:1;color:#e9e7e1;">{{ openTodayCount }}</span>
+          <span style="font-size:11px;color:#9a9d95;">open</span>
+        </div>
+        <div style="height:5px;border-radius:9999px;background:rgba(255,255,255,0.08);overflow:hidden;margin-top:10px;">
+          <div style="height:100%;width:{{ dayProgress }};background:#f0b429;border-radius:9999px;"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:6px;">
+          <span style="font-size:10px;font-variant-numeric:tabular-nums;color:#7e817a;">{{ nowLabel }}</span>
+          <span style="font-size:10px;color:#7e817a;">{{ overdueLine }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- CENTER -->
+    <div ref="{{ setCenterRef }}" style="flex:1;min-width:0;display:flex;flex-direction:column;gap:10px;overflow-y:auto;">
+
+      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+        <div style="display:flex;align-items:center;gap:6px;border:1px solid rgba(255,255,255,0.12);border-radius:5px;padding:5px 10px;background:rgba(18,23,17,0.965);">
+          <span style="font-size:10px;color:#f0b429;">&#9651;</span>
+          <span style="font-size:10.5px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;">Hub</span>
+        </div>
+        <button onClick="{{ onPrev }}" style="width:30px;height:28px;border:1px solid rgba(255,255,255,0.12);border-radius:5px;background:rgba(18,23,17,0.965);color:#c9ccc4;cursor:pointer;display:flex;align-items:center;justify-content:center;" style-hover="border-color:rgba(240,180,41,0.5);color:#f0b429;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"></path></svg>
+        </button>
+        <button onClick="{{ onNext }}" style="width:30px;height:28px;border:1px solid rgba(255,255,255,0.12);border-radius:5px;background:rgba(18,23,17,0.965);color:#c9ccc4;cursor:pointer;display:flex;align-items:center;justify-content:center;" style-hover="border-color:rgba(240,180,41,0.5);color:#f0b429;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>
+        </button>
+        <span style="display:inline-flex;align-items:center;gap:2px;flex-shrink:0;margin-left:4px;opacity:0.6;"><span style="width:2px;height:5px;border-radius:1px;background:#7fa63a;transform:rotate(-20deg);"></span><span style="width:4px;height:8px;border-radius:1px 1px 2px 2px;background:#c96a15;"></span></span>
+        <div style="font-size:10.5px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#f0b429;margin-left:6px;">Project calendar</div>
+        <div style="flex:1;"></div>
+        <button onClick="{{ onExport }}" title="Download all tasks and settings as a file" style="height:28px;padding:0 10px;border:1px solid rgba(255,255,255,0.12);border-radius:5px;background:rgba(18,23,17,0.965);color:#83867e;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;" style-hover="border-color:rgba(240,180,41,0.6);color:#f0b429;">Export</button>
+        <button onClick="{{ onPickImport }}" title="Load tasks from an exported file" style="height:28px;padding:0 10px;border:1px solid rgba(255,255,255,0.12);border-radius:5px;background:rgba(18,23,17,0.965);color:#83867e;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;" style-hover="border-color:rgba(240,180,41,0.6);color:#f0b429;">Import</button>
+        <input ref="{{ setImportInput }}" type="file" accept="application/json,.json" onChange="{{ onImportFile }}" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;" />
+        <button onClick="{{ onPickBackdrop }}" title="Choose a background photo" style="height:28px;padding:0 10px;border:1px solid rgba(255,255,255,0.12);border-radius:5px;background:rgba(18,23,17,0.965);color:#83867e;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;" style-hover="border-color:rgba(240,180,41,0.6);color:#f0b429;">Backdrop</button>
+      </div>
+
+      <div style="flex-shrink:0;background:rgba(18,23,17,0.965);border:1px solid rgba(255,255,255,0.09);border-radius:8px;padding:16px 20px 12px;">
+        <div style="display:flex;align-items:center;gap:14px;">
+          <button onClick="{{ onPrev }}" style="width:36px;height:36px;flex-shrink:0;border:1px solid rgba(240,180,41,0.5);border-radius:50%;background:transparent;color:#f0b429;cursor:pointer;display:flex;align-items:center;justify-content:center;" style-hover="background:rgba(240,180,41,0.14);">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"></path></svg>
+          </button>
+          <div style="flex:1;text-align:center;font-size:40px;font-weight:800;letter-spacing:-0.015em;line-height:1.1;color:#f0b429;">{{ rangeLabel }}</div>
+          <button onClick="{{ onNext }}" style="width:36px;height:36px;flex-shrink:0;border:1px solid rgba(240,180,41,0.5);border-radius:50%;background:transparent;color:#f0b429;cursor:pointer;display:flex;align-items:center;justify-content:center;" style-hover="background:rgba(240,180,41,0.14);">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>
+          </button>
+        </div>
+        <div style="height:1px;background:rgba(255,255,255,0.09);margin-top:14px;"></div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px;">
+          <div style="display:flex;gap:4px;">
+            <button onClick="{{ onMonth }}" style="height:30px;padding:0 16px;border:1px solid {{ monthTabBd }};border-radius:5px;cursor:pointer;font-size:12px;font-weight:600;background:{{ monthTabBg }};color:{{ monthTabFg }};">Month</button>
+            <button onClick="{{ onWeek }}" style="height:30px;padding:0 16px;border:1px solid {{ weekTabBd }};border-radius:5px;cursor:pointer;font-size:12px;font-weight:600;background:{{ weekTabBg }};color:{{ weekTabFg }};">Week</button>
+          </div>
+          <div style="flex:1;"></div>
+          <button onClick="{{ onToday }}" style="height:30px;padding:0 14px;border:1px solid rgba(255,255,255,0.12);border-radius:5px;cursor:pointer;font-size:12px;background:rgba(255,255,255,0.04);color:#c9ccc4;" style-hover="border-color:rgba(240,180,41,0.5);color:#f0b429;">Today</button>
+          <div style="display:flex;align-items:center;gap:8px;border:1px solid rgba(255,255,255,0.12);border-radius:5px;padding:0 10px;height:30px;width:170px;background:rgba(255,255,255,0.03);">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#7e817a" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+            <input type="text" placeholder="Search" value="{{ query }}" onChange="{{ onQuery }}" style="flex:1;min-width:0;border:none;background:transparent;color:#e9e7e1;font-size:12px;" />
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:11px;">
+          <sc-for list="{{ legend }}" as="lg" hint-placeholder-count="4">
+            <div style="display:flex;align-items:center;gap:6px;">
+              <span style="width:9px;height:9px;border-radius:2px;background:{{ lg.color }};"></span>
+              <span style="font-size:10.5px;color:#9a9d95;">{{ lg.label }}</span>
+            </div>
+          </sc-for>
+          <span style="width:1px;height:12px;background:rgba(255,255,255,0.12);"></span>
+          <sc-for list="{{ prioLegend }}" as="pl" hint-placeholder-count="3">
+            <div style="display:flex;align-items:center;gap:5px;">
+              <span style="width:7px;height:7px;border-radius:50%;background:{{ pl.color }};"></span>
+              <span style="font-size:10.5px;color:#9a9d95;">{{ pl.label }}</span>
+            </div>
+          </sc-for>
+          <div style="flex:1;"></div>
+          <div style="font-size:10.5px;color:#7e817a;">{{ dragHint }}</div>
+        </div>
+      </div>
+
+      <!-- MONTH -->
+      <sc-if value="{{ isMonth }}" hint-placeholder-val="{{ true }}">
+        <div ref="{{ setPanelRef }}" style="flex-shrink:0;display:flex;flex-direction:column;height:clamp(240px,calc(100vh - 372px),620px);background:rgba(18,23,17,0.965);border:1px solid rgba(255,255,255,0.09);border-radius:8px;overflow:hidden;">
+          <div ref="{{ setHzRef }}" style="flex:1;min-height:0;display:flex;overflow-x:auto;overflow-y:hidden;">
+          <div style="flex:1;min-width:840px;display:flex;flex-direction:column;min-height:0;">
+          <div style="flex-shrink:0;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));border-bottom:1px solid rgba(255,255,255,0.09);">
+            <sc-for list="{{ dowHeader }}" as="d" hint-placeholder-count="7">
+              <div style="padding:8px 10px;font-size:10px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:{{ d.fg }};border-right:{{ d.br }};">{{ d.label }}</div>
+            </sc-for>
+          </div>
+          <div ref="{{ setMonthRef }}" style="flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));grid-auto-rows:132px;">
+            <sc-for list="{{ monthCells }}" as="c" hint-placeholder-count="42">
+              <div onDragOver="{{ c.onOver }}" onDragLeave="{{ c.onLeave }}" onDrop="{{ c.onDrop }}" style="display:flex;flex-direction:column;min-height:132px;padding:7px 7px 6px;background:{{ c.bg }};border-right:{{ c.br }};border-bottom:{{ c.bb }};opacity:{{ c.opacity }};outline:{{ c.outline }};outline-offset:-2px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+                  <span style="font-size:13px;font-weight:600;font-variant-numeric:tabular-nums;color:{{ c.numFg }};">{{ c.day }}</span>
+                  <span style="display:inline-flex;align-items:center;gap:2px;flex-shrink:0;margin-left:5px;opacity:{{ c.carrot }};"><span style="width:2px;height:4px;border-radius:1px;background:#7fa63a;transform:rotate(-20deg);"></span><span style="width:4px;height:7px;border-radius:1px 1px 2px 2px;background:#c96a15;"></span></span>
+                  <span style="flex:1;"></span>
+                  <span style="font-size:9.5px;font-variant-numeric:tabular-nums;color:#6f736b;">{{ c.countLabel }}</span>
+                </div>
+                <div style="flex:1;min-height:0;display:flex;flex-direction:column;align-items:flex-start;gap:3px;margin-top:5px;overflow:visible;">
+                  <sc-for list="{{ c.chips }}" as="ch" hint-placeholder-count="2">
+                    <div title="{{ ch.tip }}" style="position:relative;z-index:{{ ch.zIndex }};box-sizing:border-box;width:{{ ch.width }};max-width:{{ ch.width }};flex:0 0 auto;display:flex;align-items:center;gap:4px;border-radius:{{ ch.radius }};padding:3px 4px;pointer-events:none;background:{{ ch.bg }};border:1px solid {{ ch.bd }};opacity:{{ ch.opacity }};min-width:0;">
+                      <span title="{{ ch.prioName }}" style="width:5px;height:5px;border-radius:50%;flex-shrink:0;background:{{ ch.prio }};opacity:{{ ch.dotOpacity }};"></span>
+                      <button draggable="true" onDragStart="{{ ch.onDragStart }}" onDragEnd="{{ ch.onDragEnd }}" onClick="{{ ch.onOpen }}" style="pointer-events:auto;flex:1 1 0;min-width:0;text-align:left;border:none;background:transparent;padding:0;cursor:grab;font-size:10px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#e4e2dc;text-decoration:{{ ch.strike }};">{{ ch.label }}</button>
+                      <button onClick="{{ ch.onRemove }}" title="Send back to backlog" style="pointer-events:auto;display:{{ ch.xDisplay }};flex:0 0 9px;border:none;background:transparent;padding:0;cursor:pointer;font-size:10px;line-height:1;color:#83867e;" style-hover="color:#f2f0ea;">&#215;</button>
+                      <span draggable="true" onDragStart="{{ ch.resizeDrag.onDragStart }}" onDragEnd="{{ ch.resizeDrag.onDragEnd }}" title="Drag sideways to change how many days it covers" style="pointer-events:auto;flex:0 0 5px;height:12px;border-radius:2px;cursor:ew-resize;background:{{ ch.prio }};opacity:{{ ch.resizeOpacity }};"></span>
+                    </div>
+                  </sc-for>
+                  <sc-if value="{{ c.hasMore }}" hint-placeholder-val="{{ false }}">
+                    <div style="font-size:9.5px;color:#7e817a;padding-left:3px;">{{ c.moreLabel }}</div>
+                  </sc-if>
+                </div>
+                <button onClick="{{ c.onAddHere }}" title="Add a task on this day" style="flex:0 0 20px;width:100%;margin-top:4px;border:1px dashed rgba(255,255,255,0.14);border-radius:4px;background:transparent;color:#75786f;font-size:10px;line-height:1;padding:0;cursor:pointer;white-space:nowrap;overflow:hidden;" style-hover="border-color:rgba(240,180,41,0.55);color:#f0b429;">+ add</button>
+              </div>
+            </sc-for>
+          </div>
+          </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- WEEK -->
+      <sc-if value="{{ isWeek }}" hint-placeholder-val="{{ false }}">
+        <div ref="{{ setPanelRef }}" style="flex-shrink:0;background:rgba(18,23,17,0.965);border:1px solid rgba(255,255,255,0.09);border-radius:8px;overflow:hidden;display:flex;flex-direction:column;height:clamp(240px,calc(100vh - 372px),620px);">
+          <div ref="{{ setWeekHzRef }}" style="flex:1;min-height:0;display:flex;overflow-x:auto;overflow-y:hidden;">
+          <div style="flex:1;min-width:894px;display:flex;flex-direction:column;min-height:0;">
+          <div style="display:grid;grid-template-columns:54px repeat(7,minmax(0,1fr));border-bottom:1px solid rgba(255,255,255,0.09);flex-shrink:0;">
+            <div style="border-right:1px solid rgba(255,255,255,0.09);"></div>
+            <sc-for list="{{ weekDays }}" as="d" hint-placeholder-count="7">
+              <div style="padding:7px 9px;border-right:{{ d.br }};background:{{ d.headBg }};">
+                <div style="font-size:10px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#8b8e86;">{{ d.dow }}</div>
+                <div style="font-size:17px;font-weight:300;font-variant-numeric:tabular-nums;color:{{ d.numFg }};">{{ d.day }}</div>
+              </div>
+            </sc-for>
+          </div>
+          <div style="display:grid;grid-template-columns:54px repeat(7,minmax(0,1fr));border-bottom:1px solid rgba(255,255,255,0.09);flex-shrink:0;min-height:36px;">
+            <div style="border-right:1px solid rgba(255,255,255,0.09);padding:6px 7px;font-size:9.5px;letter-spacing:0.1em;text-transform:uppercase;color:#75786f;">All day</div>
+            <sc-for list="{{ weekDays }}" as="d" hint-placeholder-count="7">
+              <div onDragOver="{{ d.onOver }}" onDragLeave="{{ d.onLeave }}" onDrop="{{ d.onDrop }}" style="border-right:{{ d.br }};padding:4px;display:flex;flex-direction:column;gap:3px;min-width:0;max-height:96px;overflow-y:auto;background:{{ d.allDayBg }};">
+                <sc-for list="{{ d.allDay }}" as="ch" hint-placeholder-count="1">
+                  <div draggable="true" onDragStart="{{ ch.onDragStart }}" onDragEnd="{{ ch.onDragEnd }}" onClick="{{ ch.onOpen }}" style="display:flex;align-items:center;gap:5px;border-radius:5px;padding:3px 5px;cursor:grab;background:{{ ch.bg }};border:1px solid {{ ch.bd }};">
+                    <span title="{{ ch.prioName }}" style="width:6px;height:6px;border-radius:50%;flex-shrink:0;background:{{ ch.prio }};"></span>
+                    <span style="flex:1;min-width:0;font-size:10.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#e4e2dc;text-decoration:{{ ch.strike }};">{{ ch.title }}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-for>
+          </div>
+          <div ref="{{ setHourRef }}" style="flex:1;min-height:0;overflow-y:auto;">
+            <div style="display:grid;grid-template-columns:54px 1fr;">
+              <div style="border-right:1px solid rgba(255,255,255,0.09);">
+                <sc-for list="{{ hourLabels }}" as="h" hint-placeholder-count="11">
+                  <div style="height:52px;padding:2px 7px;text-align:right;font-size:10px;font-variant-numeric:tabular-nums;color:#75786f;border-bottom:1px solid rgba(255,255,255,0.05);">{{ h.label }}</div>
+                </sc-for>
+              </div>
+              <div style="position:relative;">
+                <div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));grid-auto-rows:52px;">
+                  <sc-for list="{{ hourCells }}" as="hc" hint-placeholder-count="77">
+                    <div onDragOver="{{ hc.onOver }}" onDragLeave="{{ hc.onLeave }}" onDrop="{{ hc.onDrop }}" style="border-right:{{ hc.br }};border-bottom:1px solid rgba(255,255,255,0.05);background:{{ hc.bg }};"></div>
+                  </sc-for>
+                </div>
+                <sc-if value="{{ nowVisible }}" hint-placeholder-val="{{ false }}">
+                  <div style="position:absolute;left:{{ nowLine.left }};width:{{ nowLine.width }};top:{{ nowLine.top }}px;height:0;border-top:2px solid #f0b429;pointer-events:none;z-index:2;">
+                    <div style="position:absolute;left:-4px;top:-5px;width:8px;height:8px;border-radius:50%;background:#f0b429;"></div>
+                    <div style="position:absolute;right:3px;top:-15px;font-size:9.5px;font-weight:700;font-variant-numeric:tabular-nums;color:#f0b429;">{{ nowLine.label }}</div>
+                  </div>
+                </sc-if>
+                <sc-for list="{{ weekEvents }}" as="e" hint-placeholder-count="4">
+                  <div draggable="true" onDragStart="{{ e.onDragStart }}" onDragEnd="{{ e.onDragEnd }}" onClick="{{ e.onOpen }}" title="{{ e.tip }}" style="position:absolute;left:{{ e.left }};width:{{ e.width }};top:{{ e.top }}px;height:{{ e.height }}px;border-radius:6px;padding:4px 7px;overflow:hidden;cursor:grab;background:{{ e.bg }};border:1px solid {{ e.bd }};border-left:3px solid {{ e.accent }};">
+                    <div style="display:{{ e.timeDisplay }};font-size:9.5px;font-weight:700;font-variant-numeric:tabular-nums;color:{{ e.accent }};">{{ e.timeLabel }}</div>
+                    <div style="font-size:11px;line-height:1.3;color:#e9e7e1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ e.title }}</div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+          </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- BOARD -->
+      <div style="flex-shrink:0;display:flex;flex-direction:column;gap:8px;padding-bottom:4px;">
+        <div style="display:flex;align-items:baseline;gap:9px;">
+          <span style="font-size:10.5px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#f0b429;">Task board</span>
+          <span style="font-size:10.5px;color:#7e817a;">Drag a card between columns to change its status.</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;">
+          <sc-for list="{{ columns }}" as="col" hint-placeholder-count="3">
+            <div onDragOver="{{ col.onOver }}" onDragLeave="{{ col.onLeave }}" onDrop="{{ col.onDrop }}" style="display:flex;flex-direction:column;background:{{ col.bg }};border:1px solid {{ col.bd }};border-radius:8px;overflow:hidden;min-height:220px;">
+              <div style="display:flex;align-items:center;gap:8px;padding:9px 11px;border-bottom:1px solid rgba(255,255,255,0.09);">
+                <span style="width:7px;height:7px;border-radius:50%;background:{{ col.dot }};"></span>
+                <span style="font-size:10px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;">{{ col.label }}</span>
+                <span style="font-size:10.5px;font-variant-numeric:tabular-nums;color:#7e817a;">{{ col.count }}</span>
+              </div>
+              <div style="flex:1;padding:9px;display:flex;flex-direction:column;gap:7px;max-height:340px;overflow-y:auto;">
+                <sc-if value="{{ col.isEmpty }}" hint-placeholder-val="{{ false }}">
+                  <div style="border:1px dashed rgba(255,255,255,0.13);border-radius:6px;padding:14px 10px;font-size:11px;color:#75786f;text-align:center;">{{ col.emptyLine }}</div>
+                </sc-if>
+                <sc-for list="{{ col.cards }}" as="c" hint-placeholder-count="3">
+                  <div draggable="true" onDragStart="{{ c.onDragStart }}" onDragEnd="{{ c.onDragEnd }}" onClick="{{ c.onOpen }}" style="border:1px solid rgba(255,255,255,0.09);border-left:3px solid {{ c.accent }};border-radius:6px;background:rgba(255,255,255,0.03);padding:8px 10px;cursor:grab;opacity:{{ c.opacity }};transition:border-color 150ms;" style-hover="border-color:rgba(240,180,41,0.45);">
+                    <div style="display:flex;align-items:flex-start;gap:7px;">
+                      <div style="flex:1;min-width:0;font-size:12px;line-height:1.4;text-wrap:pretty;overflow-wrap:anywhere;color:#e9e7e1;text-decoration:{{ c.strike }};">{{ c.title }}</div>
+                      <button onClick="{{ c.onRemove }}" title="Delete task" style="flex:0 0 11px;border:none;background:transparent;padding:0;cursor:pointer;font-size:12px;line-height:1;color:#83867e;" style-hover="color:#fb7185;">&#215;</button>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:7px;">
+                      <span style="font-size:9.5px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;padding:2px 6px;border-radius:3px;color:{{ c.accent }};background:{{ c.projBg }};">{{ c.projLabel }}</span>
+                      <span style="font-size:10px;font-variant-numeric:tabular-nums;color:{{ c.dueColor }};">{{ c.dueLabel }}</span>
+                      <span style="font-size:10px;font-variant-numeric:tabular-nums;color:#75786f;">{{ c.subLabel }}</span>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT RAIL -->
+    <div style="width:236px;flex-shrink:0;display:flex;flex-direction:column;gap:10px;overflow-y:auto;">
+
+      <div onDragOver="{{ onUnschedOver }}" onDrop="{{ onUnschedDrop }}" style="background:{{ backlogBg }};border:1px solid {{ backlogBd }};border-radius:8px;padding:12px;">
+        <div style="font-size:10.5px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#f0b429;">Task backlog</div>
+        <div style="font-size:11px;line-height:1.45;color:#9a9d95;margin-top:5px;">Park tasks here, then drag them onto a day. Drag a day entry back to unschedule it.</div>
+        <textarea id="backlog-input" placeholder="New parked task" value="{{ newTitle }}" onChange="{{ onNewTitle }}" onKeyDown="{{ onNewKey }}" rows="2" style="width:100%;margin-top:9px;border:1px solid rgba(255,255,255,0.13);border-radius:5px;background:rgba(255,255,255,0.03);color:#e9e7e1;font-size:11.5px;line-height:1.4;padding:7px 8px;resize:vertical;"></textarea>
+        <div style="display:flex;gap:4px;margin-top:8px;">
+          <sc-for list="{{ prioOptions }}" as="o" hint-placeholder-count="3">
+            <button onClick="{{ o.onPick }}" style="flex:1;height:24px;border:1px solid {{ o.bd }};border-radius:4px;cursor:pointer;font-size:10.5px;background:{{ o.bg }};color:{{ o.fg }};">{{ o.label }}</button>
+          </sc-for>
+        </div>
+        <div style="font-size:9.5px;letter-spacing:0.1em;text-transform:uppercase;color:#75786f;margin-top:8px;">Department</div>
+        <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:5px;">
+          <sc-for list="{{ deptOptions }}" as="o" hint-placeholder-count="4">
+            <button onClick="{{ o.onPick }}" style="display:flex;align-items:center;gap:5px;height:23px;padding:0 7px;border:1px solid {{ o.bd }};border-radius:4px;cursor:pointer;font-size:10px;background:{{ o.bg }};color:{{ o.fg }};">
+              <span style="width:6px;height:6px;border-radius:2px;flex-shrink:0;background:{{ o.dot }};"></span>
+              {{ o.label }}
+            </button>
+          </sc-for>
+        </div>
+        <button onClick="{{ onAdd }}" style="width:100%;margin-top:9px;border:1px dashed rgba(255,255,255,0.16);border-radius:5px;background:transparent;color:#c9ccc4;font-size:11px;padding:6px 0;cursor:pointer;opacity:{{ addDisabled }};" style-hover="border-color:rgba(240,180,41,0.55);color:#f0b429;">+ park task</button>
+        <div style="display:flex;flex-direction:column;gap:5px;margin-top:10px;">
+          <sc-for list="{{ backlogChips }}" as="b" hint-placeholder-count="6">
+            <div draggable="true" onDragStart="{{ b.onDragStart }}" onDragEnd="{{ b.onDragEnd }}" style="display:flex;align-items:flex-start;gap:6px;border:1px solid {{ b.bd }};border-radius:5px;padding:6px 7px;cursor:grab;background:{{ b.bg }};opacity:{{ b.opacity }};">
+              <span style="width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:4px;background:{{ b.accent }};"></span>
+              <button onClick="{{ b.onCycleDept }}" title="{{ b.deptName }}" style="flex:0 0 7px;height:7px;margin-top:4px;padding:0;border:none;border-radius:2px;cursor:pointer;background:{{ b.deptColor }};"></button>
+              <button onClick="{{ b.onOpen }}" style="flex:1;min-width:0;text-align:left;border:none;background:transparent;padding:0;cursor:pointer;font-size:11px;line-height:1.35;overflow-wrap:anywhere;color:#e9e7e1;">{{ b.title }}</button>
+              <button onClick="{{ b.onToggleLane }}" title="Switch lane" style="flex-shrink:0;border:none;background:transparent;padding:0;cursor:pointer;font-size:9.5px;letter-spacing:0.04em;text-transform:uppercase;color:{{ b.laneColor }};">{{ b.laneLabel }}</button>
+              <button onClick="{{ b.onRemove }}" title="Delete" style="flex-shrink:0;border:none;background:transparent;padding:0;cursor:pointer;font-size:11px;line-height:1;color:#83867e;" style-hover="color:#f2f0ea;">&#215;</button>
+            </div>
+          </sc-for>
+          <sc-if value="{{ backlogEmpty }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#8b8e86;padding:4px 2px;"><span style="display:inline-flex;align-items:center;gap:2px;flex-shrink:0;opacity:0.5;"><span style="width:2px;height:4px;border-radius:1px;background:#7fa63a;transform:rotate(-20deg);"></span><span style="width:4px;height:7px;border-radius:1px 1px 2px 2px;background:#c96a15;"></span></span>Backlog is empty.</div>
+          </sc-if>
+        </div>
+      </div>
+
+      <div style="background:rgba(18,23,17,0.965);border:1px solid rgba(255,255,255,0.09);border-radius:8px;padding:12px;">
+        <div style="display:flex;align-items:baseline;gap:7px;">
+          <span style="flex:1;font-size:10.5px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#f0b429;">Decompress</span>
+          <button onClick="{{ toy.onGuessStart }}" style="border:none;background:transparent;padding:0;cursor:pointer;font-size:10px;letter-spacing:0.04em;color:#83867e;" style-hover="color:#f0b429;">guess game</button>
+          <button onClick="{{ toy.onEmblem }}" style="border:none;background:transparent;padding:0;cursor:pointer;font-size:10px;letter-spacing:0.04em;color:#83867e;" style-hover="color:#f0b429;">colorway</button>
+        </div>
+        <div style="font-size:11px;line-height:1.45;color:#9a9d95;margin-top:5px;">He lives in a walk-up off the calendar. Nothing here is tracked.</div>
+
+        <div style="display:flex;justify-content:center;margin-top:12px;">
+        <div style="position:relative;width:100%;max-width:236px;padding:34px 32px 14px;background:linear-gradient(160deg,#3c4a2c 0%,#2b351f 52%,#1d2416 100%);border:1px solid rgba(255,255,255,0.13);border-radius:46% 46% 42% 42% / 26% 26% 54% 54%;box-shadow:inset 0 2px 0 rgba(255,255,255,0.12),inset 0 -10px 22px rgba(0,0,0,0.5),0 12px 26px rgba(0,0,0,0.45);">
+          <div style="position:absolute;top:14px;left:50%;transform:translateX(-50%);width:44px;height:4px;border-radius:9999px;background:rgba(0,0,0,0.42);box-shadow:inset 0 1px 0 rgba(255,255,255,0.1);"></div>
+          <div style="padding:8px;border-radius:9px;background:rgba(0,0,0,0.34);box-shadow:inset 0 2px 5px rgba(0,0,0,0.6);">
+
+        <div ref="{{ toy.setStage }}" onPointerDown="{{ toy.onDown }}" onPointerMove="{{ toy.onMove }}" onPointerUp="{{ toy.onUp }}" onPointerLeave="{{ toy.onLeave }}" style="position:relative;width:100%;height:132px;border:1px solid rgba(255,255,255,0.14);border-radius:5px;overflow:hidden;touch-action:none;cursor:grab;background:{{ toy.bg }};">
+          <div ref="{{ toy.setBubble }}" style="position:absolute;left:50%;top:8px;transform:translateX(-50%);padding:3px 8px;border-radius:9999px;background:rgba(0,0,0,0.5);border:1px solid rgba(255,255,255,0.12);font-size:10px;color:#e9e7e1;opacity:0;transition:opacity 220ms;pointer-events:none;white-space:nowrap;"></div>
+
+          <canvas ref="{{ toy.setCanvas }}" style="position:absolute;inset:0;width:100%;height:100%;display:block;image-rendering:pixelated;"></canvas>
+        </div>
+
+          </div>
+          <div style="display:flex;align-items:center;justify-content:center;gap:3px;margin-top:9px;opacity:0.5;">
+            <span style="width:3px;height:5px;border-radius:1px;background:#7fa63a;transform:rotate(-18deg);"></span>
+            <span style="width:5px;height:9px;border-radius:1px 1px 3px 3px;background:#c96a15;"></span>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:center;gap:20px;margin-top:8px;"><button onClick="{{ toy.onBtnA }}" title="Feed" style="width:26px;height:26px;padding:0;border:1px solid rgba(0,0,0,0.5);border-radius:50%;cursor:pointer;background:radial-gradient(circle at 34% 30%,#f3f1e9,#b9b6ab);box-shadow:0 2px 3px rgba(0,0,0,0.45);" style-active="transform:translateY(1px);"></button>
+            <button onClick="{{ toy.onBtnB }}" title="Toy" style="width:26px;height:26px;padding:0;border:1px solid rgba(0,0,0,0.5);border-radius:50%;cursor:pointer;background:radial-gradient(circle at 34% 30%,#f3f1e9,#b9b6ab);box-shadow:0 2px 3px rgba(0,0,0,0.45);" style-active="transform:translateY(1px);"></button>
+            <button onClick="{{ toy.onBtnC }}" title="Nap" style="width:26px;height:26px;padding:0;border:1px solid rgba(0,0,0,0.5);border-radius:50%;cursor:pointer;background:radial-gradient(circle at 34% 30%,#f3f1e9,#b9b6ab);box-shadow:0 2px 3px rgba(0,0,0,0.45);" style-active="transform:translateY(1px);"></button>
+          </div>
+        </div>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:8px;margin-top:9px;">
+          <span style="font-size:10.5px;font-weight:600;letter-spacing:0.04em;color:{{ toy.accent }};">{{ toy.ageLine }}</span>
+          <span style="flex:1;font-size:10px;color:#9a9d95;text-align:right;">{{ toy.statusLine }}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;margin-top:4px;">
+          <span style="width:5px;height:5px;border-radius:50%;background:{{ toy.careColor }};"></span>
+          <span style="font-size:9.5px;letter-spacing:0.08em;text-transform:uppercase;color:{{ toy.careColor }};">{{ toy.careLine }}</span>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:5px;margin-top:8px;">
+          <sc-for list="{{ toy.meters }}" as="m" hint-placeholder-count="2">
+            <div style="display:flex;align-items:center;gap:7px;">
+              <span style="width:38px;flex-shrink:0;font-size:9.5px;letter-spacing:0.1em;text-transform:uppercase;color:#75786f;">{{ m.label }}</span>
+              <div style="flex:1;height:5px;border-radius:9999px;background:rgba(255,255,255,0.08);overflow:hidden;">
+                <div style="height:100%;width:{{ m.pct }};background:{{ m.color }};border-radius:9999px;transition:width 400ms linear;"></div>
+              </div>
+              <span style="width:26px;flex-shrink:0;text-align:right;font-size:9.5px;font-variant-numeric:tabular-nums;color:#75786f;">{{ m.value }}</span>
+            </div>
+          </sc-for>
+        </div>
+
+        <sc-if value="{{ toy.gameOn }}" hint-placeholder-val="{{ false }}">
+          <div style="margin-top:9px;border:1px solid rgba(240,180,41,0.45);border-radius:6px;padding:8px;background:rgba(240,180,41,0.07);">
+            <div style="font-size:10px;color:#e9e7e1;line-height:1.4;">{{ toy.gameLabel }}</div>
+            <div style="display:flex;gap:5px;margin-top:7px;">
+              <button onClick="{{ toy.onGuessL }}" style="flex:1;height:26px;border:1px solid rgba(240,180,41,0.5);border-radius:5px;cursor:pointer;font-size:11px;font-weight:700;background:rgba(240,180,41,0.12);color:#f0b429;">&#9664; Left</button>
+              <button onClick="{{ toy.onGuessR }}" style="flex:1;height:26px;border:1px solid rgba(240,180,41,0.5);border-radius:5px;cursor:pointer;font-size:11px;font-weight:700;background:rgba(240,180,41,0.12);color:#f0b429;">Right &#9654;</button>
+            </div>
+          </div>
+        </sc-if>
+
+        <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;margin-top:9px;">
+          <sc-for list="{{ toy.actions }}" as="a" hint-placeholder-count="6">
+            <button onClick="{{ a.onDo }}" style="height:26px;padding:0;border:1px solid {{ a.bd }};border-radius:5px;cursor:pointer;font-size:9.5px;font-weight:700;letter-spacing:0.02em;background:{{ a.bg }};color:{{ a.fg }};" style-hover="border-color:rgba(240,180,41,0.6);">{{ a.label }}</button>
+          </sc-for>
+        </div>
+
+      </div>
+
+
+      <div style="background:rgba(18,23,17,0.965);border:1px solid rgba(255,255,255,0.09);border-radius:8px;padding:12px;">
+        <div style="display:flex;align-items:baseline;gap:7px;">
+          <span style="flex:1;font-size:10.5px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#f0b429;">Closed out today</span>
+          <span style="font-size:10.5px;font-variant-numeric:tabular-nums;color:#7e817a;">{{ doneTodayCount }}</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:5px;margin-top:9px;">
+          <sc-for list="{{ doneToday }}" as="d" hint-placeholder-count="2">
+            <div style="display:flex;align-items:center;gap:7px;">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#b7d44a" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              <span style="flex:1;min-width:0;font-size:11px;color:#9a9d95;">{{ d.title }}</span>
+            </div>
+          </sc-for>
+          <sc-if value="{{ noneDone }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#8b8e86;"><span style="display:inline-flex;align-items:center;gap:2px;flex-shrink:0;opacity:0.5;"><span style="width:2px;height:4px;border-radius:1px;background:#7fa63a;transform:rotate(-20deg);"></span><span style="width:4px;height:7px;border-radius:1px 1px 2px 2px;background:#c96a15;"></span></span>Nothing closed yet today.</div>
+          </sc-if>
+        </div>
+      </div>
+      <sc-if value="{{ hasDetail }}" hint-placeholder-val="{{ false }}">
+        <div style="background:rgba(18,23,17,0.965);border:1px solid rgba(240,180,41,0.35);border-radius:8px;padding:12px;">
+          <div style="display:flex;align-items:baseline;gap:7px;">
+            <span style="flex:1;font-size:10.5px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#f0b429;">Selected</span>
+            <button onClick="{{ onCloseDetail }}" style="border:none;background:transparent;padding:0;cursor:pointer;font-size:11px;color:#83867e;" style-hover="color:#f2f0ea;">close</button>
+          </div>
+          <div style="font-size:14px;font-weight:600;line-height:1.35;margin-top:8px;text-wrap:pretty;overflow-wrap:anywhere;">{{ detail.title }}</div>
+          <div style="display:flex;align-items:center;gap:6px;margin-top:7px;flex-wrap:wrap;">
+            <span style="font-size:9.5px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;padding:2px 6px;border-radius:3px;color:{{ detail.projColor }};background:{{ detail.projBg }};">{{ detail.projLabel }}</span>
+            <span style="font-size:9.5px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;padding:2px 6px;border-radius:9999px;color:{{ detail.prioColor }};border:1px solid {{ detail.prioBd }};">{{ detail.prioLabel }}</span>
+          </div>
+          <div style="font-size:11px;font-variant-numeric:tabular-nums;color:#9a9d95;margin-top:7px;">{{ detail.whenLabel }}</div>
+          <sc-if value="{{ detail.hasSubs }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;flex-direction:column;gap:4px;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.09);">
+              <sc-for list="{{ detail.subs }}" as="s" hint-placeholder-count="3">
+                <button onClick="{{ s.onToggle }}" style="display:flex;align-items:center;gap:8px;width:100%;text-align:left;border:none;background:transparent;cursor:pointer;padding:2px 0;">
+                  <span style="width:14px;height:14px;flex-shrink:0;border-radius:3px;border:1px solid {{ s.boxBd }};background:{{ s.boxBg }};display:flex;align-items:center;justify-content:center;">
+                    <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="{{ s.tick }}" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  </span>
+                  <span style="font-size:11.5px;color:{{ s.fg }};text-decoration:{{ s.strike }};">{{ s.label }}</span>
+                </button>
+              </sc-for>
+            </div>
+          </sc-if>
+          <sc-if value="{{ detail.hasNotes }}" hint-placeholder-val="{{ false }}">
+            <div style="font-size:11px;line-height:1.5;color:#b6b8b1;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.09);text-wrap:pretty;">{{ detail.notes }}</div>
+          </sc-if>
+          <sc-if value="{{ detail.hasSpan }}" hint-placeholder-val="{{ false }}">
+            <button onClick="{{ detail.onClearSpan }}" style="width:100%;height:26px;margin-top:9px;border:1px solid rgba(255,255,255,0.13);border-radius:5px;cursor:pointer;font-size:10.5px;background:transparent;color:#9a9d95;">Collapse to one day</button>
+          </sc-if>
+          <div style="display:flex;gap:6px;margin-top:11px;">
+            <button onClick="{{ detail.onToggleDone }}" style="flex:1;height:28px;border:none;border-radius:5px;cursor:pointer;font-size:11px;font-weight:600;background:#f0b429;color:#17190f;">{{ detail.doneLabel }}</button>
+            <button onClick="{{ detail.onUnschedule }}" style="height:28px;padding:0 10px;border:1px solid rgba(255,255,255,0.13);border-radius:5px;cursor:pointer;font-size:11px;background:transparent;color:#9a9d95;">Unschedule</button>
+          </div>
+        </div>
+      </sc-if>
+    </div>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;calendarMode&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;month&quot;,&quot;week&quot;],&quot;default&quot;:&quot;month&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Behavior&quot;},&quot;weekStartsOn&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Sunday&quot;,&quot;Monday&quot;],&quot;default&quot;:&quot;Sunday&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Behavior&quot;}}">
+const TODAY = "2026-08-27";
+const NOW = "14:20";
+const DOW_FULL = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+const MON_SHORT = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const START_HOUR = 8, END_HOUR = 19, ROW_H = 52;
+const CELL_H = 132, CELL_W = 118;
+const WEEK_COL = 120, WEEK_GUTTER = 54;
+
+const AMBER = "#f0b429", PINK = "#f472b6", LIME = "#b7d44a", SKY = "#7dd3fc", ROSE = "#fb7185";
+const TEXT = "#e9e7e1", MUTED = "#9a9d95", DIM = "#75786f";
+const PANEL = "rgba(18,23,17,0.965)", LINE = "rgba(255,255,255,0.09)";
+
+const ORANGES = ["#f0b429", "#f472b6", "#b7d44a", "#7dd3fc", "#c084fc", "#fb8b24", "#2dd4bf", "#fdba74"];
+const DEFAULT_PROJECTS = [
+  { id: "portal", label: "Client Portal", color: ORANGES[1] },
+  { id: "ops", label: "Ops", color: ORANGES[2] },
+  { id: "mkt", label: "Marketing", color: ORANGES[3] },
+  { id: "per", label: "Personal", color: ORANGES[0] },
+];
+const PRIO = {
+  high: { label: "High", color: "#ef4444" },
+  med: { label: "Medium", color: "#facc15" },
+  low: { label: "Low", color: "#4ade80" },
+};
+const TOYS = [
+  { name: "Standard grey", bg: "#141815", halo: "rgba(255,255,255,0.05)", body: "#cfd2c9", limb: "#b3b6ad", glove: "#e8eae2", accent: AMBER, ink: "#1a1c18" },
+  { name: "Flare orange", bg: "#1a1409", halo: "rgba(240,180,41,0.12)", body: "#f0b429", limb: "#d69c1c", glove: "#ffd873", accent: "#1a1c18", ink: "#2a2110" },
+  { name: "Pond green", bg: "#0e1712", halo: "rgba(183,212,74,0.12)", body: "#b7d44a", limb: "#96b23a", glove: "#d8ef7f", accent: "#17190f", ink: "#1b2415" },
+  { name: "Blush pink", bg: "#1a1016", halo: "rgba(244,114,182,0.12)", body: "#f472b6", limb: "#d55b9b", glove: "#ffa8d4", accent: "#17190f", ink: "#2a1220" },
+  { name: "Ice blue", bg: "#0c1418", halo: "rgba(125,211,252,0.12)", body: "#7dd3fc", limb: "#5fb4dd", glove: "#bde9ff", accent: "#17190f", ink: "#0f2027" },
+  { name: "Night violet", bg: "#14101c", halo: "rgba(192,132,252,0.12)", body: "#c084fc", limb: "#a066e0", glove: "#dcb6ff", accent: AMBER, ink: "#1c1226" },
+];
+const SHAPES = [
+  { w: "20px", h: "20px", r: "50%", fill: PINK, bd: "none", tf: "none" },
+  { w: "19px", h: "19px", r: "3px", fill: LIME, bd: "none", tf: "none" },
+  { w: "15px", h: "15px", r: "2px", fill: SKY, bd: "none", tf: "rotate(45deg)" },
+  { w: "24px", h: "9px", r: "9999px", fill: AMBER, bd: "none", tf: "none" },
+  { w: "20px", h: "20px", r: "50%", fill: "transparent", bd: "3px solid " + LIME, tf: "none" },
+  { w: "19px", h: "19px", r: "3px", fill: "transparent", bd: "3px solid " + ROSE, tf: "none" },
+  { w: "7px", h: "22px", r: "2px", fill: "#dcd9d1", bd: "none", tf: "none" },
+  { w: "18px", h: "18px", r: "50% 50% 50% 3px", fill: "#c084fc", bd: "none", tf: "rotate(-45deg)" },
+];
+
+function hexA(hex, a) {
+  const n = parseInt(hex.slice(1), 16);
+  return "rgba(" + ((n >> 16) & 255) + "," + ((n >> 8) & 255) + "," + (n & 255) + "," + a + ")";
+}
+function parseIso(s) { const p = s.split("-").map(Number); return { y: p[0], m: p[1] - 1, d: p[2] }; }
+function isoOf(y, m, d) { return new Date(Date.UTC(y, m, d)).toISOString().slice(0, 10); }
+function addDays(s, n) { const p = parseIso(s); return new Date(Date.UTC(p.y, p.m, p.d + n)).toISOString().slice(0, 10); }
+function dowOf(s) { const p = parseIso(s); return new Date(Date.UTC(p.y, p.m, p.d)).getUTCDay(); }
+function daysBetween(a, b) { return Math.round((new Date(b + "T00:00:00Z") - new Date(a + "T00:00:00Z")) / 86400000); }
+function fmtTime(t) {
+  if (!t) return "";
+  const h = Number(t.slice(0, 2)), mi = t.slice(3, 5);
+  const ap = h >= 12 ? "p" : "a";
+  const hh = h % 12 === 0 ? 12 : h % 12;
+  return mi === "00" ? hh + ap : hh + ":" + mi + ap;
+}
+
+const SEED = [];
+const SEED_IDS = /^(e\d+|t\d+)$/;
+
+function drawLoader(ctx, W, H, t, prog) {
+  ctx.clearRect(0, 0, W, H);
+  const F = (x, y, w, h, col) => { ctx.fillStyle = col; ctx.fillRect(Math.round(x), Math.round(y), w, h); };
+  const GROUND = 96;
+  F(0, 0, W, H, "#0d120c");
+  // hills
+  for (let i = 0; i < 3; i++) {
+    const off = ((t * (10 + i * 6)) % (W + 80)) - 40;
+    const hw = 70 + i * 24, hh = 14 + i * 5;
+    F(W - off - hw, GROUND - hh, hw, hh, i === 0 ? "#1a2416" : i === 1 ? "#161f12" : "#131a10");
+  }
+  // soil
+  F(0, GROUND, W, H - GROUND, "#2a3320");
+  F(0, GROUND, W, 2, "#3f5128");
+  // grass tufts, scrolling
+  for (let i = 0; i < 16; i++) {
+    const x = ((i * 37 - t * 46) % (W + 20) + W + 20) % (W + 20) - 10;
+    F(x, GROUND - 3, 1, 3, "#3f5128");
+    F(x + 2, GROUND - 2, 1, 2, "#35441f");
+  }
+  // carrots half-buried in the soil
+  for (let i = 0; i < 5; i++) {
+    const x = ((i * 71 - t * 46) % (W + 40) + W + 40) % (W + 40) - 20;
+    const y = GROUND + 4 + (i % 2) * 6;
+    F(x, y, 6, 2, "#e07b1f");
+    F(x + 1, y + 2, 4, 2, "#c96a15");
+    F(x + 2, y + 4, 2, 2, "#a9560f");
+    F(x + 1, y - 3, 1, 3, "#7fa63a");
+    F(x + 3, y - 4, 1, 4, "#7fa63a");
+    F(x + 5, y - 2, 1, 2, "#6b8f30");
+  }
+
+  const gait = t * 7;
+  // rabbit, out front
+  const rx = 216 + Math.sin(t * 1.3) * 6;
+  const hop = Math.abs(Math.sin(t * 6));
+  const ry = GROUND - 14 - Math.round(hop * 11);
+  F(rx + 12, GROUND - 1, 12, 2, "rgba(0,0,0,0.45)");
+  F(rx + 4, ry + 4, 14, 9, "#e9e7e1");
+  F(rx + 16, ry, 8, 7, "#e9e7e1");
+  F(rx + 17, ry - 6, 2, 7, "#e9e7e1");
+  F(rx + 21, ry - 7, 2, 8, "#e9e7e1");
+  F(rx + 18, ry - 5, 1, 4, "#f2b8c6");
+  F(rx + 22, ry - 6, 1, 5, "#f2b8c6");
+  F(rx + 22, ry + 2, 1, 1, "#1b1f18");
+  F(rx + 2, ry + 3, 3, 4, "#e9e7e1");
+  const legUp = hop > 0.35;
+  F(rx + 5, ry + 13, 4, legUp ? 2 : 4, "#dcd9d1");
+  F(rx + 13, ry + 13, 4, legUp ? 3 : 4, "#dcd9d1");
+
+  // hunter, chasing
+  const hx = 96 + Math.sin(t * 1.1 + 1) * 5;
+  const bob = Math.round(Math.sin(gait) * 1.5);
+  const hy = GROUND - 30 + bob;
+  F(hx + 6, GROUND - 1, 14, 2, "rgba(0,0,0,0.45)");
+  const stride = Math.sin(gait);
+  F(hx + 6, hy + 22, 4, 8, "#3b3428");
+  F(hx + 12, hy + 22, 4, 8, "#3b3428");
+  F(hx + 4 + (stride > 0 ? -2 : 2), hy + 29, 7, 2, "#241f19");
+  F(hx + 12 + (stride > 0 ? 2 : -2), hy + 29, 7, 2, "#241f19");
+  F(hx + 5, hy + 10, 12, 13, "#6b5b3e");
+  F(hx + 5, hy + 16, 12, 2, "#574a32");
+  F(hx + 8, hy + 3, 8, 8, "#d9a06b");
+  F(hx + 14, hy + 6, 1, 1, "#1b1f18");
+  F(hx + 6, hy + 1, 12, 3, "#e0563f");
+  F(hx + 15, hy + 2, 5, 2, "#e0563f");
+  // arms + rifle, pointed after the rabbit
+  F(hx + 15, hy + 12, 8, 3, "#6b5b3e");
+  F(hx + 20, hy + 11, 22, 2, "#4a453c");
+  F(hx + 40, hy + 10, 4, 2, "#6f6a5e");
+  F(hx + 18, hy + 13, 6, 3, "#3b352c");
+  F(hx + 3, hy + 12, 5, 3, "#6b5b3e");
+
+  // vignette
+  const g = ctx.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, "rgba(8,11,9,0.55)");
+  g.addColorStop(0.45, "rgba(8,11,9,0)");
+  g.addColorStop(1, "rgba(8,11,9,0.5)");
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, W, H);
+}
+
+const PET_W = 44, PET_H = 58, PET_SCALE = 2;
+const STAGES = ["Bunny", "Kit", "Hare"];
+
+function drawRoom(F, W, H, t, accent) {
+  const floorY = H - 13;
+  F(0, 0, W, floorY, "#232821");
+  F(0, 0, W, 3, "#2b312a");
+  F(0, floorY - 2, W, 2, "#3a4038");
+  F(0, floorY, W, H - floorY, "#171a15");
+  for (let x = -6; x < W; x += 11) F(x + (H - floorY), floorY, 1, H - floorY, "#1f231c");
+
+  // window, left wall
+  const wx = 5, wy = 9, ww = 30, wh = 34;
+  F(wx - 1, wy - 1, ww + 2, wh + 2, "#4a5047");
+  F(wx, wy, ww, wh, "#0d1420");
+  // skyline
+  F(wx + 1, wy + 20, 6, wh - 20, "#070a10");
+  F(wx + 8, wy + 14, 7, wh - 14, "#070a10");
+  F(wx + 16, wy + 22, 5, wh - 22, "#070a10");
+  F(wx + 22, wy + 11, 7, wh - 11, "#070a10");
+  // water tower
+  F(wx + 23, wy + 5, 5, 5, "#101722");
+  F(wx + 24, wy + 10, 1, 2, "#101722");
+  F(wx + 27, wy + 10, 1, 2, "#101722");
+  // lit windows
+  const lit = [[3, 24], [10, 18], [12, 26], [18, 27], [24, 16], [26, 21], [4, 30], [17, 32]];
+  lit.forEach((q, i) => {
+    if ((Math.floor(t * 0.7) + i) % 5 !== 0) F(wx + q[0], wy + q[1], 1, 2, i % 3 ? "#f0b429" : "#ffd873");
+  });
+  // mullions
+  F(wx, wy + Math.round(wh / 2), ww, 1, "#4a5047");
+  F(wx + Math.round(ww / 2), wy, 1, wh, "#4a5047");
+  // sill + radiator
+  F(wx - 2, wy + wh + 1, ww + 4, 2, "#565c52");
+  const ry = floorY - 11;
+  F(wx + 1, ry, 26, 10, "#3f453c");
+  for (let i = 0; i < 8; i++) F(wx + 2 + i * 3, ry + 1, 2, 8, "#575e52");
+
+  // posters, right wall
+  const pxA = W - 46, pyA = 7;
+  F(pxA - 1, pyA - 1, 20, 26, "#4a5047");
+  F(pxA, pyA, 18, 24, "#e8e3d6");
+  F(pxA + 3, pyA + 4, 12, 12, accent);
+  F(pxA + 6, pyA + 7, 6, 6, "#e8e3d6");
+  F(pxA + 3, pyA + 19, 12, 2, "#8a8f84");
+  F(pxA + 8, pyA - 2, 3, 2, "#c9cbc2");
+
+  const pxB = W - 23, pyB = 12;
+  F(pxB - 1, pyB - 1, 20, 24, "#4a5047");
+  F(pxB, pyB, 18, 22, "#1b2430");
+  // pixel "NY"
+  const ink = "#f0b429";
+  F(pxB + 3, pyB + 5, 1, 7, ink); F(pxB + 7, pyB + 5, 1, 7, ink);
+  F(pxB + 4, pyB + 6, 1, 2, ink); F(pxB + 5, pyB + 8, 1, 2, ink); F(pxB + 6, pyB + 10, 1, 2, ink);
+  F(pxB + 10, pyB + 5, 1, 2, ink); F(pxB + 14, pyB + 5, 1, 2, ink);
+  F(pxB + 11, pyB + 7, 1, 1, ink); F(pxB + 13, pyB + 7, 1, 1, ink);
+  F(pxB + 12, pyB + 8, 1, 4, ink);
+  F(pxB + 3, pyB + 16, 12, 1, "#5d6b7d");
+  F(pxB + 8, pyB - 2, 3, 2, "#c9cbc2");
+
+  // rug
+  const rw = Math.min(64, W - 24), rx = Math.round((W - rw) / 2);
+  F(rx + 2, floorY + 2, rw - 4, 6, "#2c2118");
+  F(rx, floorY + 4, rw, 4, "#3a2b1e");
+  F(rx + 6, floorY + 4, rw - 12, 1, "#54402c");
+
+  // carrot motif woven into the rug, and a stray one by the wall
+  const cxr = rx + Math.round(rw / 2) - 2;
+  F(cxr, floorY + 5, 4, 1, "#6b4a22");
+  F(cxr + 1, floorY + 6, 2, 1, "#6b4a22");
+  F(cxr + 4, floorY + 4, 1, 1, "#4c5a2a");
+  const sx = 7;
+  F(sx, floorY + 3, 5, 2, "#8a4f1c");
+  F(sx + 1, floorY + 5, 3, 1, "#733f14");
+  F(sx + 1, floorY + 1, 1, 2, "#4f6327");
+  F(sx + 3, floorY, 1, 3, "#4f6327");
+}
+
+function drawPet(ctx, W, H, p, c, env) {
+  ctx.clearRect(0, 0, W, H);
+  const F = (x, y, w, h, col) => { ctx.fillStyle = col; ctx.fillRect(Math.round(x), Math.round(y), w, h); };
+
+  const napping = p.mode === "nap";
+  const cheering = p.cheer > 0 || p.mode === "fetch";
+  const eating = p.mode === "eat";
+  const petting = p.pet > 0.4 || p.mode === "pet";
+
+  const sick = env.sick;
+  const stage = env.stage;
+  const grow = stage === 0 ? -4 : stage === 2 ? 2 : 0;
+
+  drawRoom(F, W, H, p.t, c.accent === "#17190f" ? c.body : c.accent);
+
+  const groundY = H - 7;
+  const ox = Math.round(W / 2 - PET_W / 2 + p.x / PET_SCALE);
+  const moving = Math.abs(p.vx || 0) > 5;
+  const bobSrc = napping ? Math.sin(p.t * 1.1) : moving ? Math.sin((p.walk || 0) * Math.PI * 2) : Math.sin(p.t * 1.5) * 0.6;
+  const bob = Math.round(bobSrc * (napping ? 1 : moving ? 1.6 : 1));
+  const oy = Math.round(groundY - PET_H + bob - p.y / PET_SCALE);
+  // mirror the whole figure so it faces where it walks
+  const facing = (p.face || 1) < 0 ? -1 : 1;
+  ctx.save();
+  if (facing < 0) {
+    ctx.translate(ox * 2 + PET_W, 0);
+    ctx.scale(-1, 1);
+  }
+  const px = (x, y, w, h, col) => F(ox + x, oy + y, w, h, col);
+
+  // shadow
+  const sw = Math.max(10, 22 - Math.round(p.y / 14));
+  ctx.globalAlpha = 0.45;
+  F(ox + Math.round((PET_W - sw) / 2), groundY - 1, sw, 3, "#000");
+  ctx.globalAlpha = 1;
+
+  const walking = moving && !napping;
+  const step = walking ? (Math.floor(p.walk || 0) % 2)
+    : cheering ? (Math.floor(p.t * 9) % 2) : 0;
+  const stretching = (p.stretch || 0) > 0;
+
+  // poop piles
+  for (let i = 0; i < env.poops; i++) {
+    const gx = 6 + i * 12, gy = groundY - 5;
+    ctx.fillStyle = "#6b4a2a";
+    ctx.fillRect(gx + 1, gy + 3, 7, 2);
+    ctx.fillRect(gx + 2, gy + 1, 5, 2);
+    ctx.fillRect(gx + 3, gy, 3, 1);
+    ctx.fillStyle = "#8a6234";
+    ctx.fillRect(gx + 3, gy + 1, 2, 1);
+  }
+
+  // ── small quadruped rabbit, matching the loading-screen bunny ──
+  const g = grow;
+  const breathe = !walking && !napping ? Math.round((p.breath || 0) * 0.5) : 0;
+  const faceDir = env.gameDir != null ? env.gameDir : 0;
+  const tilt = napping ? 0 : faceDir ? faceDir * 2 : Math.round((p.lookX || 0) * 1.5);
+  const hx = tilt;
+  const twitch = napping ? 0 : Math.round(Math.sin(p.t * 2.3) * 1.5) + (Math.floor(p.t * 0.7) % 5 === 0 ? 1 : 0);
+  const eyeDx = faceDir ? faceDir : Math.max(-1, Math.min(1, Math.round((p.lookX || 0) * 1.6)));
+  const eyeDy = Math.max(-1, Math.min(1, Math.round((p.lookY || 0) * 1.4)));
+  // nose dips to the floor while eating, chin lifts while cheering
+  const hd = eating ? 6 : cheering ? -3 : napping ? 12 : 0;
+
+  if (napping) {
+    // curled on the floor, ears laid back along the spine
+    F(ox + 4, oy + 44, 8, 7, "#f4f2ea");
+    px(8, 46 - g, 24 + g, 12 + g, c.body);
+    px(12, 43, 17, 4, c.body);
+    px(9, 54, 24, 4, c.limb);
+    px(11, 56, 20, 2, c.shade);
+    px(14, 41, 15, 4, c.body);
+    px(15, 42, 12, 2, ROSE);
+    px(28, 44, 13, 12, c.body);
+    px(26, 47, 4, 8, c.body);
+    px(32, 49, 5, 1, c.ink);
+    px(40, 51, 3, 2, ROSE);
+  } else {
+    // tail puff at the rear, under the haunch
+    F(ox + 4, oy + 39, 9, 9, "#f4f2ea");
+    F(ox + 6, oy + 41, 4, 3, "#ffffff");
+    F(ox + 4, oy + 47, 9, 1, "#d8d5cc");
+
+    // haunch, back, chest
+    px(7, 38 - g, 18 + g, 18 + g, c.body);
+    px(11, 44, 10, 8, c.shade);
+    px(18, 34 - g - breathe, 20, 20 + g + breathe, c.body);
+    px(24, 32 - breathe, 13, 5 + breathe, c.body);
+    px(29, 38, 10, 16, c.body);
+
+    // back foot flat on the floor, front legs beneath the chest — bottoms pinned to the floor row
+    const fb = groundY - Math.round(p.y / PET_SCALE);
+    const bf = walking ? (step ? 1 : 0) : 0;
+    F(ox + 7 - bf, fb - 5, 17, 5, c.limb);
+    F(ox + 9 - bf, fb - 2, 15, 2, c.shade);
+    const pawBottom = fb - (cheering ? 5 : 0);
+    const drawLeg = (lx, sw) => {
+      const top = oy + 50 + sw;
+      const pawY = pawBottom - 2;
+      if (pawY > top) F(ox + lx + 1, top, 4, pawY - top, c.limb);
+      F(ox + lx, pawY, 6, 2, c.glove);
+    };
+    drawLeg(26, walking ? (step ? 3 : 0) : 0);
+    drawLeg(33, walking ? (step ? 0 : 3) : 0);
+
+    // upright ears, one taller, twitching
+    px(hx + 28 - twitch, 9 + hd, 5, 20, c.body);
+    px(hx + 34 + twitch, 7 + hd, 5, 22, c.body);
+    px(hx + 29 - twitch, 12 + hd, 3, 14, ROSE);
+    px(hx + 35 + twitch, 10 + hd, 3, 15, ROSE);
+
+    // head, cheek, muzzle
+    px(hx + 27, 26 + hd, 14, 15, c.body);
+    px(hx + 25, 30 + hd, 3, 9, c.body);
+    px(hx + 38, 32 + hd, 4, 8, c.body);
+
+    // eye — sclera holds, pupil tracks
+    if (p.blinking > 0 || petting) {
+      px(hx + 32, 33 + hd, 5, 1, c.ink);
+    } else {
+      px(hx + 32, 30 + hd, 5, 6, "#f4f2ea");
+      px(hx + 33 + eyeDx, 31 + hd + eyeDy, 3, 4, c.ink);
+    }
+
+    // nose, cleft, buck teeth, whiskers
+    px(hx + 40, 35 + hd, 2, 2, ROSE);
+    if (eating) {
+      const chew = Math.floor(p.t * 8) % 2;
+      px(hx + 38, 38 + hd + chew, 4, 2 - chew, c.ink);
+    } else if (cheering) {
+      px(hx + 37, 38 + hd, 5, 2, c.ink);
+      px(hx + 38, 40 + hd, 3, 2, "#f4f2ea");
+    } else {
+      px(hx + 40, 37 + hd, 1, 1, c.ink);
+      px(hx + 37, 38 + hd, 4, 1, c.ink);
+      px(hx + 39, 39 + hd, 2, 2, "#f4f2ea");
+    }
+    px(hx + 41, 33 + hd, 3, 1, c.shade);
+    px(hx + 41, 37 + hd, 3, 1, c.shade);
+  }
+
+  // props, drawn in front of the pet so it reads as holding them
+  const pr = p.prop;
+  if (pr) {
+    const gx = Math.round(W / 2 + pr.x / PET_SCALE) + 4;
+    const gy = Math.round(groundY - pr.y / PET_SCALE) + 1;
+    if (pr.kind === "food") {
+      const left = 3 - pr.bites;
+      if (left > 0) {
+        F(gx - 5, gy - 3, 10, 3, "#c98a3a");
+        if (left > 1) F(gx - 6, gy - 6, 12, 3, "#8fd7a7");
+        if (left > 2) F(gx - 5, gy - 9, 10, 3, "#e0a86b");
+        F(gx - 6, gy - 1, 12, 1, "#7a5326");
+      } else {
+        F(gx - 4, gy - 1, 2, 1, "#7a5326");
+        F(gx + 2, gy - 1, 2, 1, "#7a5326");
+      }
+    } else if (pr.kind === "ball") {
+      F(gx - 3, gy - 7, 7, 7, "#f472b6");
+      F(gx - 1, gy - 6, 2, 2, "#ffe3f1");
+      F(gx - 3, gy - 1, 7, 1, "#b8447f");
+    } else if (pr.kind === "pill") {
+      F(gx - 3, gy - 2, 6, 4, "#e9e7e1");
+      F(gx - 3, gy - 2, 3, 4, ROSE);
+    }
+  }
+
+  // sick + attention marks
+  if (sick) {
+    px(hx + 25, 34, 2, 2, "#8fd7a7");
+    px(hx + 34, 38, 2, 2, "#8fd7a7");
+    ctx.fillStyle = "#7dd3fc";
+    ctx.fillRect(ox + hx + 42, oy + 38, 2, 3);
+    ctx.fillRect(ox + hx + 42, oy + 41, 3, 2);
+  }
+  if (env.attention && Math.floor(p.t * 2) % 2) {
+    ctx.fillStyle = ROSE;
+    ctx.fillRect(ox + 21, oy - 8, 3, 5);
+    ctx.fillRect(ox + 21, oy - 2, 3, 2);
+  }
+
+  // pillow while asleep
+  if (napping) {
+    F(ox + 27, oy + 54, 15, 4, "#8b8e86");
+    F(ox + 28, oy + 55, 13, 2, "#a9aca3");
+  }
+  // petting hand
+  if (petting || p.mode === "pet") {
+    const hy = oy + 16 + Math.round(Math.sin(p.t * 6) * 2);
+    const hxp = ox + 28 + Math.round(Math.sin(p.t * 6) * 4);
+    F(hxp, hy, 10, 4, "#e9c8a8");
+    F(hxp + 2, hy + 4, 6, 3, "#e9c8a8");
+  }
+  // cleaning bubbles
+  if (p.mode === "clean") {
+    ctx.fillStyle = "#7dd3fc";
+    for (let i = 0; i < 4; i++) {
+      const bx = ox + 6 + i * 9, by = oy + 40 - Math.round(((p.t * 26 + i * 7) % 26));
+      ctx.fillRect(bx, by, 2, 2);
+    }
+    F(ox + 36, oy + 34, 3, 14, "#c98a3a");
+    F(ox + 32, oy + 48, 11, 4, "#e9e7e1");
+  }
+
+  // effects
+  if (napping) {
+    const zz = Math.floor(p.t * 1.6) % 3;
+    ctx.fillStyle = c.accent;
+    for (let i = 0; i <= zz; i++) {
+      const zx = ox + 40 + i * 3, zy = oy + 40 - i * 4 - Math.round(Math.sin(p.t * 2 + i) * 1);
+      ctx.fillRect(zx, zy, 3, 1);
+      ctx.fillRect(zx, zy + 2, 3, 1);
+      ctx.fillRect(zx + 1, zy + 1, 1, 1);
+    }
+  }
+  if (petting) {
+    ctx.fillStyle = "#f472b6";
+    const hy = oy + 16 - Math.round((p.t * 8) % 10);
+    ctx.fillRect(ox + 40, hy + 1, 4, 2);
+    ctx.fillRect(ox + 41, hy, 1, 1);
+    ctx.fillRect(ox + 43, hy, 1, 1);
+    ctx.fillRect(ox + 41, hy + 3, 2, 1);
+  }
+  if (cheering) {
+    ctx.fillStyle = c.accent;
+    const s = Math.floor(p.t * 8) % 2;
+    ctx.fillRect(ox + 2 + s, oy + 24, 2, 2);
+    ctx.fillRect(ox + 42 - s, oy + 18, 2, 2);
+  }
+  // dust puff on the trailing foot while walking
+  if (walking && step) {
+    ctx.globalAlpha = 0.28;
+    F(ox + (facing > 0 ? 8 : 32), groundY - 2, 4, 1, "#cfd2c9");
+    ctx.globalAlpha = 1;
+  }
+
+  ctx.restore();
+}
+
+function newId() {
+  try {
+    if (window.crypto && window.crypto.randomUUID) return "k" + window.crypto.randomUUID().slice(0, 12);
+  } catch (e) {}
+  return "k" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+}
+
+const SAVE_KEY = "planner.v2.state";
+const BD_KEY = "planner.v2.backdrop";
+const SAVE_FIELDS = ["items", "projects", "mood", "energy", "hunger", "age", "poops", "sick", "toy", "mode", "cy", "cm", "pruned"];
+
+function loadSaved() {
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (!raw) return {};
+    const data = JSON.parse(raw);
+    const out = {};
+    SAVE_FIELDS.forEach((k) => { if (data[k] !== undefined) out[k] = data[k]; });
+    if (out.items) {
+      out.items = out.items.map((it) => ({ bucket: "queue", subs: [], notes: "", ...it }));
+      if (!data.pruned) out.items = out.items.filter((it) => !SEED_IDS.test(it.id));
+      // repair any duplicate ids left by the old sequential id scheme
+      const seen = {};
+      out.items = out.items.map((it) => {
+        if (!it.id || seen[it.id]) return { ...it, id: newId() };
+        seen[it.id] = true;
+        return it;
+      });
+      out.items = out.items.filter((it) => !/^ZZQA (ALPHA|BRAVO)$/i.test(String(it.title || "").trim()));
+    }
+    out.pruned = true;
+    return out;
+  } catch (e) { return {}; }
+}
+
+function shuffled(n, seed) {
+  const a = [];
+  for (let i = 0; i < n; i++) a.push(i);
+  let s = seed;
+  const rnd = () => { s = (s * 1664525 + 1013904223) % 4294967296; return s / 4294967296; };
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(rnd() * (i + 1));
+    const tmp = a[i]; a[i] = a[j]; a[j] = tmp;
+  }
+  return a;
+}
+
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.hourNode = null;
+    this.monthNode = null;
+    this.todayRow = null;
+    this.centerNode = null;
+    this.panelNode = null;
+    this.keys = {};
+    this.observe = (name, node) => {
+      if (this[name + "RO"]) { this[name + "RO"].disconnect(); this[name + "RO"] = null; }
+      if (!node) return;
+      this.keys[name] = null;
+      if (typeof ResizeObserver === "function") {
+        this[name + "RO"] = new ResizeObserver(() => this.applyScroll());
+        this[name + "RO"].observe(node);
+      }
+      this.applyScroll();
+    };
+    this.setHourRef = (n) => { this.hourNode = n; this.observe("hour", n); };
+    this.setMonthRef = (n) => { this.monthNode = n; this.observe("month", n); };
+    this.setCenterRef = (n) => { this.centerNode = n; this.observe("center", n); };
+    this.setPanelRef = (n) => { this.panelNode = n; this.observe("panel", n); };
+    this.setHzRef = (n) => { this.hzNode = n; this.observe("hz", n); };
+    this.setWeekHzRef = (n) => { this.weekHzNode = n; this.observe("weekHz", n); };
+    const p = parseIso(TODAY);
+    let best = null;
+    try { const v = localStorage.getItem("planner.pairs.best"); if (v) best = Number(v); } catch (e) {}
+    this.state = {
+      mode: this.props.calendarMode === "week" ? "week" : "month",
+      cy: p.y, cm: p.m,
+      weekAnchor: TODAY,
+      items: SEED.map((it) => ({ bucket: "queue", ...it, subs: it.subs.map((s) => ({ ...s })) })),
+      projects: DEFAULT_PROJECTS.map((p) => ({ ...p })),
+      newProjName: "",
+      query: "",
+      newTitle: "", newPrio: "med", newProject: null,
+      pendingDay: null,
+      seq: 1,
+      selected: null,
+      projectFilter: null,
+      dragId: null, dragOver: null,
+      deck: shuffled(16, 20260827),
+      flipped: [], matched: [], moves: 0, best,
+      ...loadSaved(),
+      pruned: true,
+      toy: 0, mood: 72, energy: 64, hunger: 68, petMode: "idle", statusLine: "Pottering about",
+      age: 0, poops: 0, sick: false, gameOn: false, gameRound: 0, gameWins: 0, gameDir: null,
+    };
+  }
+  componentDidMount() {
+    this.onKey = (e) => {
+      const t = e.target;
+      if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA")) return;
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      const k = e.key.toLowerCase();
+      if (k === "m") this.setState({ mode: "month" });
+      else if (k === "w") this.setState({ mode: "week" });
+      else if (k === "t") { const p = parseIso(TODAY); this.setState({ cy: p.y, cm: p.m, weekAnchor: TODAY }); }
+      else if (k === "escape") this.setState({ selected: null, projectFilter: null, query: "", pendingDay: null });
+      else if (k === "arrowleft" || k === "arrowright") {
+        const dir = k === "arrowleft" ? -1 : 1;
+        this.step(dir);
+      } else return;
+      e.preventDefault();
+    };
+    window.addEventListener("keydown", this.onKey);
+    this.syncScroll();
+    this.startPet();
+    this.applyBackdrop();
+    this.startBoot();
+  }
+  applyBackdrop() {
+    const n = this.bdNode;
+    if (!n) return;
+    if (this.bdSrc === undefined) {
+      try { this.bdSrc = localStorage.getItem(BD_KEY) || null; } catch (e) { this.bdSrc = null; }
+    }
+    if (this.bdSrc) {
+      n.style.backgroundImage = "url('" + this.bdSrc + "')";
+      n.style.backgroundRepeat = "no-repeat";
+      n.style.backgroundSize = "cover";
+      n.style.backgroundPosition = "center center";
+    }
+  }
+  persist() {
+    if (this.saveTimer) return;
+    this.saveTimer = setTimeout(() => {
+      this.saveTimer = null;
+      try {
+        const s = this.state;
+        const data = {};
+        SAVE_FIELDS.forEach((k) => { data[k] = s[k]; });
+        localStorage.setItem(SAVE_KEY, JSON.stringify(data));
+      } catch (e) {}
+    }, 900);
+  }
+  componentDidUpdate() { this.applyScroll(); this.persist(); }
+  componentWillUnmount() {
+    if (this.timer) clearTimeout(this.timer);
+    if (this.saveTimer) clearTimeout(this.saveTimer);
+    if (this.sayTimer) clearTimeout(this.sayTimer);
+    if (this.bubbleTimer) clearTimeout(this.bubbleTimer);
+    this.petOn = false;
+    this.bootOn = false;
+    if (this.bootTimer) clearInterval(this.bootTimer);
+    if (this.petTimer) clearInterval(this.petTimer);
+    if (this.bgPoll) clearInterval(this.bgPoll);
+    ["hour", "month", "center", "panel"].forEach((n) => { if (this[n + "RO"]) this[n + "RO"].disconnect(); });
+    if (this.onKey) window.removeEventListener("keydown", this.onKey);
+  }
+  periodKey() {
+    const s = this.state;
+    return s.mode + ":" + s.cy + ":" + s.cm + ":" + s.weekAnchor;
+  }
+  applyScroll() {
+    const pk = this.periodKey();
+    const nowH = Number(NOW.slice(0, 2)) + Number(NOW.slice(3, 5)) / 60;
+
+    const mg = this.monthNode;
+    if (mg && mg.clientHeight && this.keys.month !== pk) {
+      const row = this.todayRow != null ? this.todayRow : this.firstContentRow;
+      mg.scrollTop = row == null ? 0 : Math.max(0, row * CELL_H + CELL_H / 2 - mg.clientHeight / 2);
+      this.keys.monthH = CELL_H;
+      this.keys.month = pk;
+    }
+    const whz = this.weekHzNode;
+    if (whz && whz.clientWidth && this.keys.weekHz !== pk) {
+      const wcol = daysBetween(this.weekStart(), TODAY);
+      const c = wcol >= 0 && wcol < 7 ? wcol : 0;
+      whz.scrollLeft = Math.max(0, WEEK_GUTTER + c * WEEK_COL + WEEK_COL / 2 - whz.clientWidth / 2);
+      this.keys.weekHz = pk;
+    }
+    const hz = this.hzNode;
+    if (hz && hz.clientWidth && this.keys.hz !== pk) {
+      const col = this.todayCol != null ? this.todayCol : 0;
+      hz.scrollLeft = Math.max(0, col * CELL_W + CELL_W / 2 - hz.clientWidth / 2);
+      this.keys.hz = pk;
+    }
+    const hr = this.hourNode;
+    if (hr && hr.clientHeight && this.keys.hour !== pk) {
+      hr.scrollTop = Math.max(0, (nowH - START_HOUR) * ROW_H - hr.clientHeight / 2);
+      this.keys.hour = pk;
+    }
+
+  }
+  syncScroll() {
+    this.keys = { center: this.keys && this.keys.center };
+    this.applyScroll();
+    requestAnimationFrame(() => this.applyScroll());
+  }
+  step(dir) {
+    this.setState((s) => {
+      if (s.mode === "week") return { weekAnchor: addDays(s.weekAnchor, dir * 7) };
+      const m = s.cm + dir;
+      return { cm: (m + 12) % 12, cy: s.cy + (m < 0 ? -1 : m > 11 ? 1 : 0) };
+    });
+  }
+  weekStart() {
+    const offset = this.props.weekStartsOn === "Monday" ? 1 : 0;
+    let d = dowOf(this.state.weekAnchor) - offset;
+    if (d < 0) d += 7;
+    return addDays(this.state.weekAnchor, -d);
+  }
+  proj(id) {
+    const list = this.state.projects;
+    return list.find((x) => x.id === id) || list[0] || DEFAULT_PROJECTS[0];
+  }
+  addProject() {
+    const label = this.state.newProjName.trim();
+    if (!label) return;
+    this.setState((s) => {
+      const id = newId();
+      const used = s.projects.map((p) => p.color);
+      const color = ORANGES.find((c) => used.indexOf(c) < 0) || ORANGES[s.projects.length % ORANGES.length];
+      return { projects: s.projects.concat([{ id, label, color }]), newProjName: "" };
+    });
+  }
+  removeProject(id) {
+    this.setState((s) => {
+      if (s.projects.length <= 1) return {};
+      const rest = s.projects.filter((p) => p.id !== id);
+      const fallback = rest[0].id;
+      return {
+        projects: rest,
+        items: s.items.map((it) => (it.project === id ? { ...it, project: fallback } : it)),
+        projectFilter: s.projectFilter === id ? null : s.projectFilter,
+      };
+    });
+  }
+  update(id, patch) {
+    this.setState((s) => ({ items: s.items.map((it) => (it.id === id ? { ...it, ...patch } : it)) }));
+    if (patch.status === "done") { this.petCheer("Nice. One down."); }
+    else if (patch.date) { this.petHop(); this.say("Booked it."); }
+  }
+  say(line, ms) {
+    this.setState({ statusLine: line });
+    if (this.sayTimer) clearTimeout(this.sayTimer);
+    this.sayTimer = setTimeout(() => this.setState({ statusLine: null }), ms || 2600);
+    const b = this.petEl && this.petEl.bubble;
+    if (b) {
+      b.textContent = line;
+      b.style.opacity = "1";
+      if (this.bubbleTimer) clearTimeout(this.bubbleTimer);
+      this.bubbleTimer = setTimeout(() => { if (b) b.style.opacity = "0"; }, ms || 2400);
+    }
+  }
+  petHop(power) {
+    const p = this.pet;
+    if (!p || p.y > 1) return;
+    p.vy = power || 250;
+  }
+  petCheer(line) {
+    const p = this.pet;
+    if (p) { p.cheer = 1.2; p.mode = "cheer"; p.modeFor = 1.2; }
+    this.setState((s) => ({ mood: Math.min(100, s.mood + 6) }));
+    this.petHop(300);
+    if (line) this.say(line);
+  }
+  petAct(kind) {
+    const p = this.pet;
+    if (!p) return;
+    if (p.mode === "nap" && kind !== "nap") { p.mode = "idle"; p.modeFor = 0; p.napBlock = p.t + 12; }
+    if (kind === "feed") {
+      if (this.state.hunger > 96) { this.say("Too full.", 1600); return; }
+      p.prop = { kind: "food", x: (Math.random() * 2 - 1) * 34, y: 0, bites: 0, bite: 0 };
+      p.mode = "chase"; p.modeFor = 12;
+      p.poopAt = null;
+      this.setState({ petMode: "feed" });
+      this.say("Ooh, food.", 2000);
+    } else if (kind === "play") {
+      if (this.state.energy < 12) { this.say("Too tired.", 1600); return; }
+      p.prop = { kind: "ball", x: p.x + 34, y: 70, vy: 0, vx: -40 };
+      p.mode = "fetch"; p.modeFor = 9;
+      this.setState({ petMode: "play" });
+      this.say("Ball!", 2000);
+    } else if (kind === "pet") {
+      p.mode = "pet"; p.modeFor = 2.8;
+      this.setState({ petMode: "pet" });
+      this.say("Ahh.", 2400);
+    } else if (kind === "clean") {
+      if (!this.state.poops) { this.say("Already clean.", 1600); return; }
+      p.mode = "clean"; p.modeFor = 1.8; p.cleanAt = p.t + 0.4;
+      this.setState({ petMode: "clean" });
+      this.say("Sweeping.", 1800);
+    } else if (kind === "meds") {
+      if (!this.state.sick) { this.say("Nothing to cure.", 1600); return; }
+      p.prop = { kind: "pill", x: 40, y: 40, toMouth: 1.1 };
+      p.mode = "meds"; p.modeFor = 1.6;
+      this.setState({ petMode: "meds" });
+      this.say("Down it goes.", 2000);
+    } else {
+      p.mode = "nap"; p.modeFor = 8;
+      this.setState({ petMode: "nap" });
+      this.say("Zzz…", 4000);
+    }
+  }
+  petGuess(dir) {
+    const p = this.pet;
+    const actual = Math.random() < 0.5 ? -1 : 1;
+    const win = dir === actual;
+    this.setState((s) => {
+      const round = s.gameRound + 1;
+      const wins = s.gameWins + (win ? 1 : 0);
+      const over = round >= 3;
+      return {
+        gameDir: actual,
+        gameRound: round,
+        gameWins: wins,
+        gameOn: !over,
+        mood: Math.min(100, s.mood + (win ? 9 : 1)),
+        energy: Math.max(0, s.energy - 3),
+        petMode: over ? "idle" : "play",
+      };
+    });
+    if (win) { this.petHop(240); if (p) p.cheer = 0.9; }
+    setTimeout(() => this.setState({ gameDir: null }), 900);
+    const done = this.state.gameRound + 1 >= 3;
+    this.say(win ? "You got me!" : "Missed.", 1400);
+    if (done) setTimeout(() => this.say((this.state.gameWins) + " of 3. Good round.", 2600), 1000);
+  }
+  petPointer(e, kind) {
+    const p = this.pet;
+    if (!p) return;
+    const box = e.currentTarget.getBoundingClientRect();
+    if (kind === "leave") { p.px = null; p.py = null; p.hold = false; return; }
+    p.px = e.clientX - box.left - box.width / 2;
+    p.py = e.clientY - box.top - box.height * 0.34;
+    if (kind === "down") {
+      p.hold = true;
+      p.downAt = performance.now();
+      try { e.currentTarget.setPointerCapture(e.pointerId); } catch (err) {}
+      if (p.mode === "nap") { p.mode = "idle"; p.modeFor = 0; this.setState({ petMode: "idle" }); this.say("…up, I'm up."); }
+    } else if (kind === "up") {
+      const quick = p.downAt && performance.now() - p.downAt < 220;
+      p.hold = false;
+      if (quick) { this.petHop(); this.say("boing", 1200); }
+    }
+  }
+  startBoot() {
+    if (this.bootDone || this.bootOn) return;
+    this.bootOn = true;
+    const dur = 3000, t0 = performance.now();
+    if (this.bootFail) clearTimeout(this.bootFail);
+    this.bootFail = setTimeout(() => this.endBoot(), dur + 900);
+    const tick = (ts) => {
+      const el = this.bootEl || {};
+      const prog = Math.min(1, (ts - t0) / dur);
+      const c = el.canvas;
+      if (c) {
+        if (c.width !== 320) { c.width = 320; c.height = 120; }
+        drawLoader(c.getContext("2d"), 320, 120, (ts - t0) / 1000, prog);
+      }
+      if (el.bar) el.bar.style.width = Math.round(prog * 100) + "%";
+      if (prog >= 1) this.endBoot();
+    };
+    this.bootTimer = setInterval(() => { if (this.bootOn) tick(performance.now()); }, 33);
+    tick(t0);
+  }
+  endBoot() {
+    if (this.bootDone) return;
+    this.bootDone = true;
+    this.bootOn = false;
+    if (this.bootFail) clearTimeout(this.bootFail);
+    if (this.bootTimer) clearInterval(this.bootTimer);
+    const n = this.bootEl && this.bootEl.root;
+    if (n) {
+      n.style.opacity = "0";
+      setTimeout(() => { if (n) n.style.display = "none"; }, 420);
+    }
+  }
+  startPet() {
+    this.pet = { x: 0, tx: 0, vx: 0, y: 0, vy: 0, t: 0, next: 1.6, blink: 3, blinking: 0, mode: "idle", modeFor: 0, px: null, py: null, hold: false, land: 0, pet: 0, chew: 0, cheer: 0, face: 1, walk: 0, breath: 0, stretch: 0, dwell: 0, gaze: 0, lookX: 0, lookY: 0 };
+    this.petOn = true;
+    const el = () => this.petEl || {};
+    const step = () => {
+      if (!this.petOn) return;
+      try { this.petFrame(performance.now(), el()); }
+      catch (err) { if (!this.petErrShown) { this.petErrShown = true; console.error("pet frame", err); } }
+    };
+    if (this.petTimer) clearInterval(this.petTimer);
+    this.petTimer = setInterval(step, 33);
+    step();
+  }
+  petFrame(ts, E) {
+    {
+      const p = this.pet;
+      const dt = Math.min(0.05, (ts - (this.petTs || ts)) / 1000);
+      this.petTs = ts;
+      p.t += dt;
+
+      const RANGE = this.petRange || 40;
+      if (p.modeFor > 0) {
+        p.modeFor -= dt;
+        if (p.modeFor <= 0 && p.mode !== "nap") {
+          if (p.prop && (p.prop.kind === "ball" || p.prop.kind === "food")) p.prop = null;
+          p.mode = "idle";
+          this.setState({ petMode: "idle" });
+        }
+      }
+
+      const napping = p.mode === "nap";
+      const playing = p.mode === "fetch" || p.mode === "chase";
+
+      // props
+      const pr = p.prop;
+      if (pr && pr.kind === "ball") {
+        pr.vy -= 620 * dt;
+        pr.y += pr.vy * dt;
+        pr.x += pr.vx * dt;
+        if (pr.y <= 0) { pr.y = 0; pr.vy = Math.abs(pr.vy) * 0.62; if (pr.vy < 30) pr.vy = 0; }
+        if (pr.x < -54) { pr.x = -54; pr.vx = Math.abs(pr.vx); }
+        if (pr.x > 54) { pr.x = 54; pr.vx = -Math.abs(pr.vx); }
+        pr.vx *= 1 - 0.5 * dt;
+        if (Math.abs(pr.x - p.x) < 12 && pr.y < 26 && p.y < 20) {
+          pr.vx = (pr.x >= p.x ? 1 : -1) * (55 + Math.random() * 45);
+          pr.vy = 190;
+          this.petHop(180);
+          this.ballAcc = (this.ballAcc || 0) + 1;
+          if (this.ballAcc % 2 === 1) this.setState((s) => ({ mood: Math.min(100, s.mood + 3), energy: Math.max(0, s.energy - 1) }));
+        }
+      }
+      if (pr && pr.kind === "food" && p.mode === "eat") {
+        pr.bite -= dt;
+        if (pr.bite <= 0) {
+          pr.bite = 0.55;
+          pr.bites += 1;
+          this.setState((s) => ({ hunger: Math.min(100, s.hunger + 9), mood: Math.min(100, s.mood + 1) }));
+          if (pr.bites >= 3) {
+            p.prop = null; p.mode = "idle"; p.modeFor = 0;
+            p.poopAt = p.t + 70 + Math.random() * 90;
+            this.setState({ petMode: "idle" });
+            this.say("Om nom. Thanks.", 2200);
+          }
+        }
+      }
+      if (pr && pr.kind === "pill") {
+        pr.toMouth -= dt;
+        pr.x += (0 - pr.x) * Math.min(1, 3 * dt);
+        pr.y += (52 - pr.y) * Math.min(1, 3 * dt);
+        if (pr.toMouth <= 0) {
+          p.prop = null; p.mode = "idle";
+          this.setState((s) => ({ sick: false, mood: Math.min(100, s.mood + 6), petMode: "idle" }));
+          this.petHop(200);
+          this.say("All better.", 2200);
+        }
+      }
+      if (p.mode === "clean" && p.cleanAt && p.t > p.cleanAt) {
+        p.cleanAt = p.t + 0.5;
+        if (this.state.poops > 0) this.setState((s) => ({ poops: s.poops - 1, mood: Math.min(100, s.mood + 2) }));
+        else { p.mode = "idle"; p.cleanAt = null; this.setState({ petMode: "idle" }); this.say("Tidy.", 1600); }
+      }
+      if (p.mode === "pet") {
+        this.petAccum = (this.petAccum || 0) + dt;
+        if (this.petAccum > 0.4) { this.petAccum = 0; this.setState((s) => ({ mood: Math.min(100, s.mood + 2) })); }
+      }
+
+      // where does it want to be
+      if (pr && pr.kind === "food" && p.mode === "chase") {
+        p.tx = pr.x;
+        if (Math.abs(p.x - pr.x) < 7) { p.mode = "eat"; p.modeFor = 4; pr.bite = 0.35; }
+      }
+      else if (pr && pr.kind === "ball") { p.tx = Math.max(-RANGE, Math.min(RANGE, pr.x)); }
+      else if (p.hold || p.mode === "pet" || p.mode === "clean" || p.mode === "meds" || p.mode === "eat") { p.tx = p.x; }
+      else if (napping) { p.tx = p.x; }
+      else if (p.px != null) { p.tx = Math.max(-RANGE, Math.min(RANGE, p.px)); }
+      else if (p.t > p.next) {
+        // pick an idle behaviour rather than always pacing
+        const roll = Math.random();
+        if (playing || roll < 0.45) { p.tx = (Math.random() * 2 - 1) * RANGE; p.dwell = 0; }
+        else if (roll < 0.72) { p.tx = p.x; p.dwell = 1; p.gaze = (Math.random() * 2 - 1); }
+        else if (roll < 0.88) { p.tx = p.x + (Math.random() * 2 - 1) * 12; p.dwell = 0; }
+        else { p.tx = p.x; p.dwell = 1; p.stretch = 1.1; }
+        p.next = p.t + (playing ? 0.8 : 2.2 + Math.random() * 4.5);
+      }
+      if (p.stretch > 0) p.stretch = Math.max(0, p.stretch - dt);
+
+      // velocity-based walking: accelerate toward the target, coast to a stop
+      const maxSpeed = playing ? 78 : 34;
+      const gap = p.tx - p.x;
+      const want = Math.abs(gap) < 1.5 ? 0 : Math.max(-maxSpeed, Math.min(maxSpeed, gap * 2.4));
+      if (!isFinite(p.vx)) p.vx = 0;
+      if (!isFinite(p.x)) p.x = 0;
+      p.vx += (want - p.vx) * Math.min(1, (want === 0 ? 6 : 9) * dt);
+      if (Math.abs(p.vx) < 0.6) p.vx = 0;
+      p.x += p.vx * dt;
+      const vx = p.vx;
+      if (Math.abs(vx) > 5) p.face = vx > 0 ? 1 : -1;
+      else if (p.px != null && p.y < 4) p.face = (p.px - p.x) > 0 ? 1 : -1;
+      // step cycle advances with distance covered, so the feet do not slip
+      p.walk = (p.walk || 0) + Math.abs(p.vx) * dt / 7;
+      p.breath = Math.sin(p.t * 1.5);
+
+      // hops
+      if (playing && p.y <= 0.5 && p.t % 0.55 < dt) p.vy = 230;
+      if (p.vy !== 0 || p.y > 0) {
+        p.vy -= 900 * dt;
+        p.y += p.vy * dt;
+        if (p.y <= 0) { p.y = 0; if (p.vy < -80) p.land = 1; p.vy = 0; }
+      }
+      if (p.land > 0) p.land = Math.max(0, p.land - dt * 5);
+      if (p.cheer > 0) p.cheer = Math.max(0, p.cheer - dt);
+
+      // petting
+      if (p.hold && !napping) {
+        p.pet = Math.min(1, p.pet + dt * 3);
+        this.petAccum = (this.petAccum || 0) + dt;
+        if (this.petAccum > 0.5) {
+          this.petAccum = 0;
+          this.setState((s) => ({ mood: Math.min(100, s.mood + 2) }));
+        }
+      } else p.pet = Math.max(0, p.pet - dt * 3);
+
+      // poop timer
+      if (p.poopAt && p.t > p.poopAt) {
+        p.poopAt = null;
+        if (this.state.poops < 3) { this.setState((s) => ({ poops: s.poops + 1 })); this.say("…sorry.", 2000); }
+      }
+
+      // needs tick
+      this.tick = (this.tick || 0) + dt;
+      if (this.tick > 5) {
+        this.tick = 0;
+        const dirty = this.state.poops, ill = this.state.sick;
+        this.setState((s) => {
+          const nap = this.pet.mode === "nap";
+          const energy = Math.max(0, Math.min(100, s.energy + (nap ? 2.4 : ill ? -0.18 : -0.1)));
+          const hunger = Math.max(0, Math.min(100, s.hunger - (nap ? 0.04 : 0.1)));
+          const drain = 0.08 + dirty * 0.05 + (ill ? 0.1 : 0) + (s.hunger < 20 ? 0.08 : 0);
+          const mood = Math.max(0, Math.min(100, s.mood + (nap ? 0.1 : -drain)));
+          return { energy, hunger, mood };
+        });
+        this.ageAcc = (this.ageAcc || 0) + 5;
+        if (this.ageAcc >= 300) { this.ageAcc = 0; this.setState((s) => ({ age: s.age + 1 })); this.say("Another day older.", 2200); }
+        if (!ill && (dirty >= 2 || this.state.hunger < 12) && Math.random() < 0.01) {
+          this.setState({ sick: true });
+          this.say("Not feeling great…", 3000);
+        }
+        const busy = ["eat", "chase", "fetch", "clean", "meds", "pet"].indexOf(p.mode) >= 0;
+        const blocked = p.napBlock && p.t < p.napBlock;
+        if (this.state.energy < 10 && p.mode !== "nap" && !busy && !blocked && !p.hold) {
+          p.mode = "nap"; p.modeFor = 20; this.setState({ petMode: "nap" }); this.say("Running low. Napping.", 3000);
+        } else if (p.mode === "nap" && this.state.energy > 88) { p.mode = "idle"; p.modeFor = 0; this.setState({ petMode: "idle" }); this.say("Back."); }
+      }
+
+      // blink
+      p.blink -= dt;
+      if (p.blink <= 0) {
+        p.blinking = 0.11;
+        p.blink = Math.random() < 0.3 ? 0.22 : 2.4 + Math.random() * 3.6;
+      }
+      if (p.blinking > 0) p.blinking -= dt;
+
+      // look direction
+      p.vxs = vx;
+      const rawLookX = p.px != null ? Math.max(-1, Math.min(1, (p.px - p.x) / 70))
+        : (p.dwell && p.gaze != null ? p.gaze : Math.max(-1, Math.min(1, vx / 60)));
+      const rawLookY = p.py != null ? Math.max(-1, Math.min(1, p.py / 70)) : 0;
+      p.lookX = (p.lookX || 0) + (rawLookX - (p.lookX || 0)) * Math.min(1, 6 * dt);
+      p.lookY = (p.lookY || 0) + (rawLookY - (p.lookY || 0)) * Math.min(1, 6 * dt);
+
+      // draw
+      const cv = E.canvas;
+      if (cv) {
+        const wCss = cv.clientWidth, hCss = cv.clientHeight;
+        const W = Math.max(PET_W + 8, Math.floor(wCss));
+        const H = Math.max(PET_H + 4, Math.floor(hCss));
+        this.petRange = Math.max(6, (W - PET_W - 6) / 2 * PET_SCALE);
+        if (cv.width !== W || cv.height !== H) {
+          cv.width = W; cv.height = H;
+          this.petCtx = cv.getContext("2d");
+          if (this.petCtx) this.petCtx.imageSmoothingEnabled = false;
+        }
+        if (!this.petCtx) this.petCtx = cv.getContext("2d");
+        const ti2 = (this.state.toy || 0) % TOYS.length;
+        const T = TOYS[ti2];
+        const s2 = this.state;
+        drawPet(this.petCtx, W, H, p, {
+          body: T.body, limb: T.limb, glove: T.glove, accent: T.accent, ink: T.ink, shade: T.limb,
+        }, {
+          poops: s2.poops,
+          sick: s2.sick,
+          stage: s2.age >= 5 ? 2 : s2.age >= 2 ? 1 : 0,
+          gameDir: s2.gameDir,
+          attention: s2.sick || s2.poops >= 2 || s2.hunger < 20 || s2.mood < 20,
+        });
+      }
+    }
+  }
+  exportData() {
+    const s = this.state;
+    const data = { app: "trackingwabbitz", version: 1, savedAt: new Date().toISOString() };
+    SAVE_FIELDS.forEach((k) => { data[k] = s[k]; });
+    try { data.backdrop = localStorage.getItem(BD_KEY) || null; } catch (e) {}
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "trackingwabbitz-" + new Date().toISOString().slice(0, 10) + ".json";
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  }
+  importData(e) {
+    const f = e.target.files && e.target.files[0];
+    if (!f) return;
+    const rd = new FileReader();
+    rd.onload = () => {
+      let d = null;
+      try { d = JSON.parse(String(rd.result)); } catch (err) { return; }
+      if (!d || typeof d !== "object") return;
+      const next = {};
+      SAVE_FIELDS.forEach((k) => { if (d[k] !== undefined) next[k] = d[k]; });
+      if (d.backdrop) {
+        this.bdSrc = d.backdrop;
+        try { localStorage.setItem(BD_KEY, d.backdrop); } catch (err) {}
+        this.applyBackdrop();
+      }
+      this.setState(next);
+    };
+    rd.readAsText(f);
+    e.target.value = "";
+  }
+  remove(id) {
+    this.setState((s) => ({ items: s.items.filter((it) => it.id !== id), selected: s.selected === id ? null : s.selected }));
+  }
+  addTask(dateIso) {
+    const title = this.state.newTitle.trim();
+    if (!title) {
+      if (dateIso) {
+        this.setState({ pendingDay: dateIso });
+        const el = document.getElementById("backlog-input");
+        if (el) el.focus();
+      }
+      return;
+    }
+    const id = newId();
+    this.setState((s) => ({
+      items: [{
+        id, type: "task", title,
+        project: s.newProject || s.projectFilter || (s.projects[0] && s.projects[0].id),
+        prio: s.newPrio,
+        status: "todo", date: dateIso || s.pendingDay || null, time: null, mins: 0,
+        bucket: "queue", subs: [], notes: "",
+      }].concat(s.items),
+      newTitle: "", pendingDay: null, seq: s.seq + 1,
+    }));
+  }
+  matches(it) {
+    const q = this.state.query.trim().toLowerCase();
+    if (this.state.projectFilter && it.project !== this.state.projectFilter) return false;
+    if (!q) return true;
+    return (it.title + " " + this.proj(it.project).label).toLowerCase().indexOf(q) >= 0;
+  }
+  dragHandlers(id, kind) {
+    const payload = kind === "resize" ? "resize:" + id : id;
+    return {
+      onDragStart: (e) => {
+        try { e.dataTransfer.setData("text/plain", payload); e.dataTransfer.effectAllowed = "move"; } catch (err) {}
+        if (e.stopPropagation) e.stopPropagation();
+        this.setState({ dragId: id, dragKind: kind || "move" });
+      },
+      onDragEnd: () => this.setState({ dragId: null, dragKind: null, dragOver: null }),
+    };
+  }
+  dropOnDay(payload, iso, time) {
+    const resize = payload.indexOf("resize:") === 0;
+    const id = resize ? payload.slice(7) : payload;
+    const it = this.state.items.find((x) => x.id === id);
+    if (!it) return;
+    if (resize) {
+      // dragging the handle left past the start pulls the start back; onto the start collapses it
+      if (iso < it.date) this.update(id, { date: iso, end: it.end || it.date });
+      else if (iso === it.date) this.update(id, { end: null });
+      else this.update(id, { end: iso });
+      return;
+    }
+    const span = it.end && it.date ? daysBetween(it.date, it.end) : 0;
+    const patch = { date: iso, end: span > 0 ? addDays(iso, span) : null };
+    if (time !== undefined) { patch.time = time; patch.mins = 60; patch.end = null; }
+    this.update(id, patch);
+  }
+  dropTarget(key, apply) {
+    return {
+      onOver: (e) => { e.preventDefault(); if (this.state.dragOver !== key) this.setState({ dragOver: key }); },
+      onLeave: () => { if (this.state.dragOver === key) this.setState({ dragOver: null }); },
+      onDrop: (e) => {
+        e.preventDefault();
+        let id = this.state.dragId;
+        try { id = e.dataTransfer.getData("text/plain") || id; } catch (err) {}
+        if (id) apply(id);
+        this.setState({ dragId: null, dragOver: null });
+      },
+    };
+  }
+  chipVM(it, withTime, iso, colIndex) {
+    const pr = this.proj(it.project);
+    const done = it.status === "done";
+    const endIso = it.end || it.date;
+    const spans = endIso !== it.date;
+    const isStart = !iso || iso === it.date;
+    const days = spans ? daysBetween(it.date, endIso) + 1 : 1;
+    // how many cells this bar covers in the current week row
+    const col = colIndex || 0;
+    const roomInRow = 7 - col;
+    const remaining = iso ? daysBetween(iso, endIso) + 1 : 1;
+    const cells = Math.max(1, Math.min(remaining, roomInRow));
+    const barEndsSpan = iso ? daysBetween(iso, endIso) + 1 <= roomInRow : true;
+    return {
+      title: it.title,
+      label: (withTime && it.time && isStart ? fmtTime(it.time) + "  " : "")
+        + it.title + (spans && isStart ? "  ·  " + days + "d" : "")
+        + (spans && !isStart ? "  (cont.)" : ""),
+      width: cells > 1 ? "calc(" + cells * 100 + "% + " + (cells - 1) * 14 + "px)" : "100%",
+      spanning: spans,
+      zIndex: spans ? 3 : 1,
+      radius: spans ? ((isStart ? "4px" : "0") + " " + (barEndsSpan ? "4px" : "0") + " " + (barEndsSpan ? "4px" : "0") + " " + (isStart ? "4px" : "0")) : "4px",
+      dotOpacity: isStart ? 1 : 0.45,
+      resizeOpacity: barEndsSpan ? 1 : 0,
+      xDisplay: barEndsSpan ? "block" : "none",
+      resizeDrag: this.dragHandlers(it.id, "resize"),
+      meta: withTime && it.time ? fmtTime(it.time) : "",
+      prio: PRIO[it.prio].color,
+      prioName: PRIO[it.prio].label + " priority",
+      tip: it.title + (spans ? "  ·  " + days + " days" : "") + "  —  drag the end handle to span more days",
+      accent: pr.color,
+      bg: hexA(pr.color, it.time ? 0.16 : 0.09),
+      bd: hexA(pr.color, it.time ? 0.5 : 0.28),
+      opacity: done ? 0.5 : 1,
+      strike: done ? "line-through" : "none",
+      onOpen: () => this.setState({ selected: it.id }),
+      onRemove: (e) => { e.stopPropagation(); this.update(it.id, { date: null, time: null, bucket: "queue" }); },
+      ...this.dragHandlers(it.id),
+    };
+  }
+  flip(idx) {
+    const st = this.state;
+    if (st.matched.indexOf(idx) >= 0 || st.flipped.indexOf(idx) >= 0 || st.flipped.length >= 2) return;
+    const flipped = st.flipped.concat([idx]);
+    this.setState({ flipped });
+    if (flipped.length === 2) {
+      const a = st.deck[flipped[0]] % 8, b = st.deck[flipped[1]] % 8;
+      const moves = st.moves + 1;
+      if (a === b) {
+        const matched = st.matched.concat(flipped);
+        let best = st.best;
+        if (matched.length === 16 && (best == null || moves < best)) {
+          best = moves;
+          try { localStorage.setItem("planner.pairs.best", String(moves)); } catch (e) {}
+        }
+        this.timer = setTimeout(() => this.setState({ matched, flipped: [], moves, best }), 320);
+      } else {
+        this.timer = setTimeout(() => this.setState({ flipped: [], moves }), 720);
+      }
+    }
+  }
+
+  renderVals() {
+    const st = this.state;
+    const items = st.items;
+
+    const projectRows = st.projects.map((p) => {
+      const active = st.projectFilter === p.id;
+      return {
+        label: p.label, color: p.color,
+        count: items.filter((i) => i.project === p.id && i.status !== "done").length,
+        bg: active ? hexA(p.color, 0.14) : "transparent",
+        bd: active ? hexA(p.color, 0.5) : "transparent",
+        fg: active ? TEXT : MUTED,
+        onSelect: () => this.setState({ projectFilter: active ? null : p.id }),
+        onRemove: (e) => { e.stopPropagation(); this.removeProject(p.id); },
+      };
+    });
+
+    // Horizon
+    const horizonRaw = items.filter((it) => it.date && it.date >= TODAY && it.status !== "done" && this.matches(it))
+      .sort((a, b) => (a.date + (a.time || "zz")).localeCompare(b.date + (b.time || "zz")))
+      .slice(0, 9);
+    const horizon = horizonRaw.map((it) => {
+      const d = daysBetween(TODAY, it.date);
+      const p = parseIso(it.date);
+      const pr = this.proj(it.project);
+      return {
+        title: it.title,
+        daysLabel: d === 0 ? "today" : d === 1 ? "1 day" : d + " days",
+        daysColor: d === 0 ? AMBER : d <= 2 ? ROSE : MUTED,
+        dateLabel: MON_SHORT[p.m] + " " + p.d,
+        metaLabel: it.time ? fmtTime(it.time) : it.type === "task" ? "task" : "all day",
+        accent: pr.color,
+        bg: st.selected === it.id ? hexA(AMBER, 0.1) : "rgba(255,255,255,0.03)",
+        onOpen: () => this.setState({ selected: it.id }),
+      };
+    });
+
+    // Month grid
+    const offset = this.props.weekStartsOn === "Monday" ? 1 : 0;
+    const dowHeader = [];
+    for (let i = 0; i < 7; i++) {
+      const idx = (i + offset) % 7;
+      const weekend = idx === 0 || idx === 6;
+      dowHeader.push({ label: DOW_FULL[idx], fg: weekend ? DIM : MUTED, br: i === 6 ? "none" : "1px solid " + LINE });
+    }
+    const firstOfMonth = isoOf(st.cy, st.cm, 1);
+    let lead = dowOf(firstOfMonth) - offset;
+    if (lead < 0) lead += 7;
+    const gridStart = addDays(firstOfMonth, -lead);
+    this.todayRow = null;
+    this.todayCol = null;
+    this.firstContentRow = null;
+
+    // lane map: each week row assigns spanning tasks to a vertical slot the whole row reserves
+    const noop = () => {};
+    const spacerVM = () => ({
+      label: "\u00a0", tip: "", width: "100%", radius: "4px", bg: "transparent", bd: "transparent",
+      prio: "transparent", prioName: "", dotOpacity: 0, xDisplay: "none", resizeOpacity: 0,
+      zIndex: 0, opacity: 1, strike: "none", spanning: false,
+      onOpen: noop, onRemove: noop, onDragStart: noop, onDragEnd: noop,
+      resizeDrag: { onDragStart: noop, onDragEnd: noop },
+    });
+    const rowLanes = [];
+    for (let r = 0; r < 6; r++) {
+      const rowStart = addDays(gridStart, r * 7), rowEnd = addDays(rowStart, 6);
+      const spans = items.filter((it) => it.date && it.end && it.end !== it.date && this.matches(it)
+        && it.date <= rowEnd && it.end >= rowStart)
+        .sort((a, b) => a.date.localeCompare(b.date)
+          || (daysBetween(b.date, b.end) - daysBetween(a.date, a.end)));
+      const laneEnds = [];
+      const laneOf = {};
+      spans.forEach((it) => {
+        const c0 = Math.max(0, daysBetween(rowStart, it.date));
+        const c1 = Math.min(6, daysBetween(rowStart, it.end));
+        let lane = 0;
+        while (laneEnds[lane] != null && laneEnds[lane] >= c0) lane += 1;
+        laneEnds[lane] = c1;
+        laneOf[it.id] = { lane, c0, c1 };
+      });
+      rowLanes.push({ spans, laneOf, count: laneEnds.length });
+    }
+
+    const monthCells = [];
+    for (let i = 0; i < 42; i++) {
+      const iso = addDays(gridStart, i);
+      const p = parseIso(iso);
+      const inMonth = p.m === st.cm;
+      const dw = dowOf(iso);
+      const weekend = dw === 0 || dw === 6;
+      const today = iso === TODAY;
+      const dayItems = items.filter((it) => it.date && iso >= it.date && iso <= (it.end || it.date) && this.matches(it))
+        .sort((a, b) => {
+          const sa = (a.end && a.end !== a.date) ? 0 : 1, sb = (b.end && b.end !== b.date) ? 0 : 1;
+          if (sa !== sb) return sa - sb;
+          return (a.time || "zz").localeCompare(b.time || "zz");
+        });
+      const over = st.dragOver === "day:" + iso;
+      const pending = st.pendingDay === iso;
+      // spanning bars occupy reserved lanes; crossed days leave those slots empty
+      const col = i % 7;
+      const info = rowLanes[Math.floor(i / 7)];
+      const laneSlots = [];
+      info.spans.forEach((it) => {
+        const L = info.laneOf[it.id];
+        if (col < L.c0 || col > L.c1) return;
+        laneSlots[L.lane] = col === L.c0 ? this.chipVM(it, true, iso, col) : spacerVM();
+      });
+      for (let k = 0; k < laneSlots.length; k++) if (!laneSlots[k]) laneSlots[k] = spacerVM();
+      const singles = dayItems.filter((it) => !(it.end && it.end !== it.date));
+      // a crossed day always keeps room for at least one of its own chips
+      const room = Math.max(1, 3 - laneSlots.length);
+      const shownSingles = singles.length > room ? room : singles.length;
+      const shown = laneSlots.length + shownSingles;
+      if (today) { this.todayRow = Math.floor(i / 7); this.todayCol = i % 7; }
+      if (dayItems.length && inMonth && this.firstContentRow == null) this.firstContentRow = Math.floor(i / 7);
+      monthCells.push({
+        day: p.d,
+        countLabel: dayItems.length > 3 ? String(dayItems.length) : "",
+        bg: over ? hexA(AMBER, 0.12) : today ? hexA(AMBER, 0.06) : weekend ? "rgba(255,255,255,0.015)" : "transparent",
+        br: i % 7 === 6 ? "none" : "1px solid " + LINE,
+        bb: i >= 35 ? "none" : "1px solid " + LINE,
+        opacity: inMonth ? 1 : 0.4,
+        outline: over ? "2px dashed " + hexA(AMBER, 0.6) : pending ? "1px dashed " + hexA(AMBER, 0.5) : "none",
+        numFg: today ? AMBER : inMonth ? TEXT : DIM,
+        carrot: today ? 0.7 : 0,
+        chips: laneSlots.concat(singles.slice(0, shownSingles).map((it) => this.chipVM(it, true, iso, col))),
+        hasMore: singles.length > shownSingles,
+        moreLabel: "+" + (singles.length - shownSingles) + " more",
+        onAddHere: () => this.addTask(iso),
+        ...this.dropTarget("day:" + iso, (id) => this.dropOnDay(id, iso)),
+      });
+    }
+
+    // Week grid
+    const ws = this.weekStart();
+    const weekDays = [];
+    for (let i = 0; i < 7; i++) {
+      const iso = addDays(ws, i);
+      const p = parseIso(iso);
+      const today = iso === TODAY;
+      const over = st.dragOver === "day:" + iso;
+      weekDays.push({
+        dow: DOW_FULL[dowOf(iso)],
+        day: p.d,
+        numFg: today ? AMBER : TEXT,
+        headBg: today ? hexA(AMBER, 0.07) : "transparent",
+        allDayBg: over ? hexA(AMBER, 0.12) : today ? hexA(AMBER, 0.05) : "transparent",
+        br: i === 6 ? "none" : "1px solid " + LINE,
+        allDay: items.filter((it) => it.date && !it.time && iso >= it.date && iso <= (it.end || it.date) && this.matches(it))
+          .map((it) => this.chipVM(it, false, iso, i === 0)),
+        ...this.dropTarget("day:" + iso, (id) => this.dropOnDay(id, iso)),
+      });
+    }
+    const hourLabels = [];
+    for (let h = START_HOUR; h < END_HOUR; h++) hourLabels.push({ label: fmtTime((h < 10 ? "0" : "") + h + ":00") });
+    const hourCells = [];
+    for (let h = START_HOUR; h < END_HOUR; h++) {
+      for (let i = 0; i < 7; i++) {
+        const iso = addDays(ws, i);
+        const key = "slot:" + iso + ":" + h;
+        hourCells.push({
+          br: i === 6 ? "none" : "1px solid " + LINE,
+          bg: st.dragOver === key ? hexA(AMBER, 0.18) : iso === TODAY ? hexA(AMBER, 0.04) : "transparent",
+          ...this.dropTarget(key, (id) => this.dropOnDay(id, iso, (h < 10 ? "0" : "") + h + ":00")),
+        });
+      }
+    }
+    const weekEvents = [];
+    for (let i = 0; i < 7; i++) {
+      const iso = addDays(ws, i);
+      items.filter((it) => it.date === iso && it.time && this.matches(it)).forEach((it) => {
+        const pr = this.proj(it.project);
+        const h = Number(it.time.slice(0, 2)), mi = Number(it.time.slice(3, 5));
+        const boxH = Math.max(28, ((it.mins || 60) / 60) * ROW_H - 3);
+        const oneLine = boxH < 40;
+        weekEvents.push({
+          title: oneLine ? fmtTime(it.time) + "  " + it.title : it.title,
+          tip: fmtTime(it.time) + " " + it.title,
+          timeDisplay: oneLine ? "none" : "block",
+          timeLabel: fmtTime(it.time),
+          left: "calc(" + (i * 100 / 7) + "% + 3px)",
+          width: "calc(" + (100 / 7) + "% - 6px)",
+          top: Math.max(0, (h - START_HOUR) * ROW_H + (mi / 60) * ROW_H),
+          height: Math.max(28, ((it.mins || 60) / 60) * ROW_H - 3),
+          accent: pr.color,
+          bg: hexA(pr.color, 0.16),
+          bd: hexA(pr.color, 0.4),
+          onOpen: () => this.setState({ selected: it.id }),
+          ...this.dragHandlers(it.id),
+        });
+      });
+    }
+    const nowH = Number(NOW.slice(0, 2)) + Number(NOW.slice(3, 5)) / 60;
+    const todayCol = daysBetween(ws, TODAY);
+    const dayFrac = Math.max(0, Math.min(1, (nowH - START_HOUR) / (END_HOUR - START_HOUR)));
+
+    // Backlog
+    const backlogItems = items.filter((i) => i.type === "task" && !i.date && i.status !== "done" && this.matches(i));
+    const backlogChips = backlogItems.map((it) => {
+      const anytime = it.bucket === "anytime";
+      const pr = this.proj(it.project);
+      const list = st.projects;
+      const nextDept = list[(list.findIndex((x) => x.id === it.project) + 1) % list.length];
+      return {
+        title: it.title,
+        accent: PRIO[it.prio].color,
+        deptColor: pr.color,
+        deptName: pr.label + " → " + (nextDept ? nextDept.label : ""),
+        onCycleDept: (e) => { e.stopPropagation(); if (nextDept) this.update(it.id, { project: nextDept.id }); },
+        bg: anytime ? "rgba(255,255,255,0.03)" : hexA(pr.color, 0.12),
+        bd: anytime ? "rgba(255,255,255,0.1)" : hexA(pr.color, 0.35),
+        laneLabel: anytime ? "any" : "day",
+        laneColor: anytime ? DIM : AMBER,
+        opacity: st.dragId === it.id ? 0.4 : 1,
+        onOpen: () => this.setState({ selected: it.id }),
+        onToggleLane: (e) => { e.stopPropagation(); this.update(it.id, { bucket: anytime ? "queue" : "anytime" }); },
+        onRemove: (e) => { e.stopPropagation(); this.remove(it.id); },
+        ...this.dragHandlers(it.id),
+      };
+    });
+    const backlogTarget = this.dropTarget("backlog", (id) => this.update(id, { date: null, time: null, bucket: "queue" }));
+
+    // Board
+    const colDefs = [
+      { id: "todo", label: "To do", dot: MUTED },
+      { id: "doing", label: "In progress", dot: AMBER },
+      { id: "done", label: "Done", dot: LIME },
+    ];
+    const columns = colDefs.map((c) => {
+      const cards = items.filter((it) => it.type === "task" && it.status === c.id && this.matches(it)).map((it) => {
+        const pr = this.proj(it.project);
+        const late = it.date && it.date < TODAY && it.status !== "done";
+        const p = it.date ? parseIso(it.date) : null;
+        return {
+          title: it.title,
+          accent: pr.color,
+          projLabel: pr.label,
+          projBg: hexA(pr.color, 0.14),
+          dueLabel: p ? (it.date === TODAY ? "Today" : MON_SHORT[p.m] + " " + p.d) : "No date",
+          dueColor: late ? ROSE : DIM,
+          subLabel: it.subs.length ? it.subs.filter((s) => s.done).length + "/" + it.subs.length : "",
+          strike: it.status === "done" ? "line-through" : "none",
+          opacity: st.dragId === it.id ? 0.4 : 1,
+          onOpen: () => this.setState({ selected: it.id }),
+          onRemove: (e) => { e.stopPropagation(); this.remove(it.id); },
+          ...this.dragHandlers(it.id),
+        };
+      });
+      const over = st.dragOver === "col:" + c.id;
+      return {
+        label: c.label, dot: c.dot, count: cards.length, cards,
+        isEmpty: cards.length === 0,
+        emptyLine: c.id === "done" ? "Nothing closed yet." : c.id === "doing" ? "Drop a task here to start it." : "Drop a task here.",
+        bg: over ? hexA(AMBER, 0.07) : PANEL,
+        bd: over ? hexA(AMBER, 0.5) : LINE,
+        ...this.dropTarget("col:" + c.id, (id) => this.update(id, { status: c.id })),
+      };
+    });
+
+    // Detail
+    const sel = items.find((it) => it.id === st.selected) || null;
+    let detail = null;
+    if (sel) {
+      const pr = this.proj(sel.project);
+      const pi = PRIO[sel.prio];
+      const p = sel.date ? parseIso(sel.date) : null;
+      detail = {
+        title: sel.title,
+        projLabel: pr.label, projColor: pr.color, projBg: hexA(pr.color, 0.14),
+        prioLabel: pi.label, prioColor: pi.color, prioBd: hexA(pi.color, 0.45),
+        whenLabel: p
+          ? (sel.end && sel.end !== sel.date
+            ? MON_SHORT[p.m] + " " + p.d + " – " + MON_SHORT[parseIso(sel.end).m] + " " + parseIso(sel.end).d + " · " + (daysBetween(sel.date, sel.end) + 1) + " days"
+            : DOW_FULL[dowOf(sel.date)] + ", " + MONTHS[p.m] + " " + p.d + (sel.time ? " · " + fmtTime(sel.time) : " · all day"))
+          : "Not scheduled",
+        hasSpan: !!(sel.end && sel.end !== sel.date),
+        onClearSpan: () => this.update(sel.id, { end: null }),
+        hasSubs: sel.subs.length > 0,
+        subs: sel.subs.map((s, i) => ({
+          label: s.t,
+          fg: s.done ? MUTED : TEXT,
+          strike: s.done ? "line-through" : "none",
+          boxBg: s.done ? AMBER : "transparent",
+          boxBd: s.done ? AMBER : "rgba(255,255,255,0.2)",
+          tick: s.done ? "#17190f" : "transparent",
+          onToggle: () => this.update(sel.id, { subs: sel.subs.map((x, j) => (j === i ? { ...x, done: !x.done } : x)) }),
+        })),
+        hasNotes: !!sel.notes,
+        notes: sel.notes,
+        doneLabel: sel.status === "done" ? "Reopen" : "Mark done",
+        onToggleDone: () => this.update(sel.id, { status: sel.status === "done" ? "todo" : "done" }),
+        onUnschedule: () => this.update(sel.id, { date: null, time: null, bucket: "queue" }),
+      };
+    }
+
+    // Decompress pet
+    const ti = (st.toy || 0) % TOYS.length;
+    const mood = Math.round(st.mood), energy = Math.round(st.energy), hunger = Math.round(st.hunger);
+    const stageName = STAGES[st.age >= 5 ? 2 : st.age >= 2 ? 1 : 0];
+    const needsCare = st.sick || st.poops >= 2 || hunger < 20 || mood < 20;
+    const toy = { ...TOYS[ti],
+      statusLine: st.statusLine || (st.sick ? "Feeling poorly" : st.poops ? "Needs a clean" : hunger < 25 ? "Hungry" : st.petMode === "nap" ? "Asleep" : "Pottering about"),
+      ageLine: "Leo · " + stageName + " · day " + st.age,
+      careColor: needsCare ? ROSE : DIM,
+      careLine: st.sick ? "needs meds" : st.poops >= 2 ? "needs a clean" : hunger < 20 ? "needs food" : mood < 20 ? "needs play" : "all good",
+      meters: [
+        { label: "Food", pct: hunger + "%", value: hunger, color: hunger < 25 ? ROSE : "#fb8b24" },
+        { label: "Mood", pct: mood + "%", value: mood, color: mood < 30 ? ROSE : AMBER },
+        { label: "Rest", pct: energy + "%", value: energy, color: energy < 25 ? ROSE : LIME },
+      ],
+      gameOn: !!st.gameOn,
+      gameLabel: "Round " + Math.min(3, st.gameRound + 1) + " of 3 · which way will it look?",
+      onGuessL: () => this.petGuess(-1),
+      onGuessR: () => this.petGuess(1),
+      onGuessStart: () => {
+        if (st.gameOn) return;
+        this.setState({ gameOn: true, gameRound: 0, gameWins: 0, gameDir: null });
+        this.say("Guess which way I'll look.", 3000);
+      },
+      actions: [
+        { id: "feed", label: "Feed", alert: hunger < 20 },
+        { id: "play", label: "Toy", alert: mood < 20 },
+        { id: "pet", label: "Pet", alert: false },
+        { id: "clean", label: "Clean", alert: st.poops > 0 },
+        { id: "meds", label: "Meds", alert: st.sick },
+        { id: "nap", label: "Nap", alert: energy < 15 },
+      ].map((a) => ({
+        label: a.label,
+        bg: st.petMode === a.id ? hexA(AMBER, 0.16) : a.alert ? hexA(ROSE, 0.14) : "rgba(255,255,255,0.04)",
+        fg: st.petMode === a.id ? AMBER : a.alert ? ROSE : MUTED,
+        bd: st.petMode === a.id ? hexA(AMBER, 0.5) : a.alert ? hexA(ROSE, 0.45) : "rgba(255,255,255,0.12)",
+        onDo: () => this.petAct(a.id),
+      })),
+      setStage: this.petRefs ? this.petRefs.setStage : (this.petRefs = {
+        setStage: (n) => { this.petEl = this.petEl || {}; if (n) this.petEl.stage = n; },
+        setBubble: (n) => { this.petEl = this.petEl || {}; if (n) this.petEl.bubble = n; },
+        setCanvas: (n) => { this.petEl = this.petEl || {}; if (n) { this.petEl.canvas = n; this.petCtx = null; } },
+      }).setStage,
+      onBtnA: () => this.petAct("feed"),
+      onBtnB: () => this.petAct("play"),
+      onBtnC: () => this.petAct("nap"),
+      setBubble: this.petRefs.setBubble,
+      setCanvas: this.petRefs.setCanvas,
+      onDown: (e) => this.petPointer(e, "down"),
+      onMove: (e) => this.petPointer(e, "move"),
+      onUp: (e) => this.petPointer(e, "up"),
+      onLeave: (e) => this.petPointer(e, "leave"),
+      onEmblem: (e) => { e.stopPropagation(); this.setState((s) => ({ toy: ((s.toy || 0) + 1) % TOYS.length })); this.say("new fit"); },
+    };
+
+    const openToday = items.filter((it) => it.date === TODAY && it.status !== "done").length;
+    const overdue = items.filter((it) => it.date && it.date < TODAY && it.status !== "done").length;
+    const doneTodayItems = items.filter((it) => it.status === "done" && it.date === TODAY);
+
+    requestAnimationFrame(() => this.applyScroll());
+    const wsP = parseIso(ws), weP = parseIso(addDays(ws, 6));
+
+    return {
+      scrim: "linear-gradient(180deg,rgba(8,11,9,0.8),rgba(8,11,9,0.88))",
+      boot: this.bootRefs || (this.bootRefs = {
+        setRoot: (n) => { this.bootEl = this.bootEl || {}; if (n) this.bootEl.root = n; },
+        setCanvas: (n) => { this.bootEl = this.bootEl || {}; if (n) this.bootEl.canvas = n; },
+        setBar: (n) => { this.bootEl = this.bootEl || {}; if (n) this.bootEl.bar = n; },
+        onSkip: () => this.endBoot(),
+      }),
+      setBackdrop: (n) => { this.bdNode = n; this.applyBackdrop(); },
+      setFileInput: (n) => { this.fileNode = n; },
+      onPickBackdrop: () => { if (this.fileNode) this.fileNode.click(); },
+      onBackdropFile: (e) => {
+        const f = e.target.files && e.target.files[0];
+        if (!f) return;
+        const rd = new FileReader();
+        rd.onload = () => {
+          this.bdSrc = String(rd.result);
+          try { localStorage.setItem(BD_KEY, this.bdSrc); } catch (err) {}
+          this.applyBackdrop();
+        };
+        rd.readAsDataURL(f);
+        e.target.value = "";
+      },
+      setMonthRef: this.setMonthRef,
+      setCenterRef: this.setCenterRef,
+      setHzRef: this.setHzRef,
+      setWeekHzRef: this.setWeekHzRef,
+      setPanelRef: this.setPanelRef,
+      projectRows, horizon, horizonEmpty: horizon.length === 0,
+      openTodayCount: openToday,
+      dayProgress: Math.round(dayFrac * 100) + "%",
+      nowLabel: fmtTime(NOW),
+      overdueLine: overdue > 0 ? overdue + " overdue" : "nothing overdue",
+      isMonth: st.mode === "month", isWeek: st.mode === "week",
+      rangeLabel: st.mode === "month" ? MONTHS[st.cm] + " " + st.cy
+        : MON_SHORT[wsP.m] + " " + wsP.d + " – " + MON_SHORT[weP.m] + " " + weP.d + ", " + wsP.y,
+      monthTabBg: st.mode === "month" ? AMBER : "rgba(255,255,255,0.04)",
+      monthTabFg: st.mode === "month" ? "#17190f" : MUTED,
+      monthTabBd: st.mode === "month" ? AMBER : "rgba(255,255,255,0.12)",
+      weekTabBg: st.mode === "week" ? AMBER : "rgba(255,255,255,0.04)",
+      weekTabFg: st.mode === "week" ? "#17190f" : MUTED,
+      weekTabBd: st.mode === "week" ? AMBER : "rgba(255,255,255,0.12)",
+      onPrev: () => this.step(-1),
+      onNext: () => this.step(1),
+      onToday: () => { const p = parseIso(TODAY); this.setState({ cy: p.y, cm: p.m, weekAnchor: TODAY }); },
+      onMonth: () => this.setState({ mode: "month" }),
+      onWeek: () => this.setState({ mode: "week" }),
+      query: st.query,
+      onQuery: (e) => this.setState({ query: e.target.value }),
+      legend: st.projects.map((p) => ({ label: p.label, color: p.color })),
+      prioLegend: ["high", "med", "low"].map((k) => ({ label: PRIO[k].label, color: PRIO[k].color })),
+      newProjName: st.newProjName,
+      onNewProjName: (e) => this.setState({ newProjName: e.target.value }),
+      onNewProjKey: (e) => { if (e.key === "Enter") this.addProject(); },
+      onAddProject: () => this.addProject(),
+      dragHint: st.pendingDay
+        ? "Type a title, then press Enter to drop it on " + MON_SHORT[parseIso(st.pendingDay).m] + " " + parseIso(st.pendingDay).d
+        : "Drag a task to move it · drag its end handle to cover more days",
+
+      dowHeader, monthCells, weekDays, hourLabels, hourCells, weekEvents,
+      setHourRef: this.setHourRef,
+      nowVisible: todayCol >= 0 && todayCol < 7 && nowH >= START_HOUR && nowH < END_HOUR,
+      nowLine: {
+        top: (nowH - START_HOUR) * ROW_H,
+        left: "calc(" + (todayCol * 100 / 7) + "%)",
+        width: "calc(" + (100 / 7) + "%)",
+        label: fmtTime(NOW),
+      },
+      backlogChips, backlogEmpty: backlogChips.length === 0,
+      backlogBg: st.dragOver === "backlog" ? hexA(AMBER, 0.1) : PANEL,
+      backlogBd: st.dragOver === "backlog" ? hexA(AMBER, 0.55) : LINE,
+      onUnschedOver: backlogTarget.onOver, onUnschedDrop: backlogTarget.onDrop,
+      newTitle: st.newTitle,
+      onNewTitle: (e) => this.setState({ newTitle: e.target.value }),
+      onNewKey: (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); this.addTask(null); } },
+      onAdd: () => this.addTask(null),
+      addDisabled: st.newTitle.trim() === "" ? 0.5 : 1,
+      deptOptions: st.projects.map((p) => {
+        const on = (st.newProject || st.projectFilter || (st.projects[0] && st.projects[0].id)) === p.id;
+        return {
+          label: p.label,
+          bg: on ? hexA(p.color, 0.18) : "transparent",
+          fg: on ? p.color : DIM,
+          bd: on ? hexA(p.color, 0.55) : "rgba(255,255,255,0.12)",
+          dot: p.color,
+          onPick: () => this.setState({ newProject: p.id }),
+        };
+      }),
+      prioOptions: ["high", "med", "low"].map((k) => ({
+        label: PRIO[k].label,
+        bg: st.newPrio === k ? hexA(PRIO[k].color, 0.16) : "transparent",
+        fg: st.newPrio === k ? PRIO[k].color : DIM,
+        bd: st.newPrio === k ? hexA(PRIO[k].color, 0.5) : "rgba(255,255,255,0.12)",
+        onPick: () => this.setState({ newPrio: k }),
+      })),
+      columns,
+      hasDetail: !!detail, detail: detail || {},
+      onExport: () => this.exportData(),
+      onPickImport: () => { if (this.importInput) this.importInput.click(); },
+      setImportInput: (n) => { this.importInput = n; },
+      onImportFile: (e) => this.importData(e),
+      onCloseDetail: () => this.setState({ selected: null }),
+      toy,
+      doneToday: doneTodayItems.map((it) => ({ title: it.title })),
+      doneTodayCount: doneTodayItems.length,
+      noneDone: doneTodayItems.length === 0,
+    };
+  }
+}
+</script>
+</body>
+</html>
